@@ -1,6 +1,7 @@
 # folder
-.vscode/
-.idea/
+.vscode
+.fleet
+.idea
 __pycache__
 checkpoints
 
