@@ -18,3 +18,13 @@
 - [手把手教你实现DragGAN-代码无痛解读](https://zhuanlan.zhihu.com/p/640871357)
 - [通过DragGAN,浅谈一下对GAN与diffusion model两种生成模型的一些思考](https://zhuanlan.zhihu.com/p/639829821)
 - [Training Generative Adversarial Networks with Limited Data](https://arxiv.org/abs/2006.06676)
+
+## Generate py files from ui files
+
+### design
+
+pyside6-designer ./ui/mainwindow.ui
+
+### generate
+
+pyside6-uic ./ui/mainwindow.ui > ./ui/Ui_MainWindow.py
