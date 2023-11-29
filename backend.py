@@ -197,7 +197,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def on_Generate_PushButton_clicked(self):
-        self.model = StyleGAN(self.pickle_path, self.device, self.seed)
+        # self.model = StyleGAN(self.pickle_path, self.device, self.seed)
 
 ################## drag ##################
 
