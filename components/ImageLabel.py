@@ -8,7 +8,7 @@ from pprint import pprint
 
 class ImageLabel(QLabel):
     """
-    直接继承自QLabel, 尝试显示图片并绘制点
+    显示图片并允许绘制点以及获得所绘制顶点坐标
     """
 
     def __init__(self, file_name=None):
@@ -40,7 +40,7 @@ class ImageLabel(QLabel):
 
     def get_points(self):
         return self.points
-    
+
     def clear_points(self):
         self.points = []
 
