@@ -23,7 +23,7 @@ class ImageLabel(QLabel):
         self.pen = QPen()
         self.pen.setWidth(3)
         self.pen.setColor(QColor(0, 0, 255))  # 设置画笔颜色为蓝色
-        self.last_pos = None
+        self.points = []
 
     def set_image(self, file_name):
         try:
@@ -35,11 +35,31 @@ class ImageLabel(QLabel):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
-            self.last_pos = event.position()
+            self.points.append(event.position())
             self.update()
+
+    def get_points(self):
+        return self.points
+    
+    def clear_points(self):
+        self.points = []
 
     def mouseReleaseEvent(self, event):
         pass
+
+    def paintEvent(self, event):
+        res = super().paintEvent(event)
+        if self.points:
+            self.painter.begin(self)
+            for index, pos in enumerate(self.points):
+                if index % 2 != 0:
+                    self.pen.setColor(QColor(255, 0, 0))  # 设置画笔颜色为红色
+                else:
+                    self.pen.setColor(QColor(0, 0, 255))  # 设置画笔颜色为蓝色
+                self.painter.setPen(self.pen)
+                self.painter.drawPoint(pos)
+            self.painter.end()
+        return res
 
 
 if __name__ == "__main__":
