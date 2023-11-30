@@ -53,6 +53,8 @@ class MainWindow(QMainWindow):
         self.ui.Lambda_LineEdit.setText(str(self.lambda_))
         self.min_lambda = 0
         self.max_lambda = 10
+        # 设置ImageLabel的自适应大小比率
+        self.image_rate = None
 
     def setConnect(self):
         pass
@@ -197,6 +199,10 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def on_Generate_PushButton_clicked(self):
+        print("start generate")
+        file = os.path.realpath("./components/dog.jpg")
+        print(file)
+        self.ui.Image_Widget.set_image(file)
         # self.model = StyleGAN(self.pickle_path, self.device, self.seed)
 
 ################## drag ##################

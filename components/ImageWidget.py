@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QApplication, QWidget, QLabel, QMessageBox
-from PySide6.QtGui import QPainter, QPen, QColor, QPixmap, QImage
-from PySide6.QtCore import Qt, QSize, QPoint, QEvent
+from PySide6.QtGui import QPainter, QPixmap
+from PySide6.QtCore import QSize, QPoint
+from components.ImageLabel import ImageLabel
 
 import os
 
@@ -13,7 +14,7 @@ class ImageWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.image_label = QLabel(self)
+        self.image_label = ImageLabel(self)
         self.image_label.setScaledContents(True)
         self.image_label.installEventFilter(self)
         self.image_rate = None
@@ -28,7 +29,7 @@ class ImageWidget(QWidget):
             self.image_label.setPixmap(pix_map)
             self.compute_size()
         except:
-            pass
+            QMessageBox.critical(self, "Error", "Load image failed!")
 
     def compute_size(self):
         if self.image_rate is not None:

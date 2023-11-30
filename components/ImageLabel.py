@@ -11,8 +11,8 @@ class ImageLabel(QLabel):
     显示图片并允许绘制点以及获得所绘制顶点坐标
     """
 
-    def __init__(self, file_name=None):
-        super().__init__()
+    def __init__(self, parent=None, file_name=None):
+        super().__init__(parent)
 
         self.setScaledContents(True)
 
@@ -27,7 +27,6 @@ class ImageLabel(QLabel):
 
     def set_image(self, file_name):
         try:
-            print(file_name)
             self.setPixmap(QPixmap(file_name))
         except Exception as e:
             QMessageBox.critical(self, "Error", "Image loading failed!")
@@ -64,8 +63,6 @@ class ImageLabel(QLabel):
 
 if __name__ == "__main__":
     app = QApplication([])
-    # widget = QWidget()
-    # widget.show()
-    image = ImageLabel(os.path.realpath("./components/dog.jpg"))
+    image = ImageLabel(file_name=os.path.realpath("./components/dog.jpg"))
     image.show()
     app.exec()
