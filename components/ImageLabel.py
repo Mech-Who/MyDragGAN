@@ -3,8 +3,7 @@ from PySide6.QtGui import QPainter, QPen, QColor, QPixmap, QImage
 from PySide6.QtCore import Qt, QSize, QPoint
 
 import os
-from pprint import pprint
-
+from components.LabelStatus import LabelStatus
 
 class ImageLabel(QLabel):
     """
@@ -21,21 +20,41 @@ class ImageLabel(QLabel):
 
         self.painter = QPainter()
         self.pen = QPen()
-        self.pen.setWidth(3)
+        self.pen.setWidth(5)
         self.pen.setColor(QColor(0, 0, 255))  # 设置画笔颜色为蓝色
         self.points = []
 
+        self.status = LabelStatus.Readonly
+
     def set_image(self, file_name):
+        """
+        从图片文件加载图片
+        """
         try:
             self.setPixmap(QPixmap(file_name))
         except Exception as e:
             QMessageBox.critical(self, "Error", "Image loading failed!")
             print(f"Error: {e}")
 
+    def set_image_from_array(self, image):
+        """
+        从numpy数组加载图片
+        """
+        try:
+            self.setPixmap(QPixmap.fromImage(QImage.from_array(image)))
+        except Exception as e:
+            QMessageBox.critical(self, "Error", "Image loading failed!")
+            print(f"Error: {e}")
+
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton and self.status == LabelStatus.Draw:
             self.points.append(event.position())
             self.update()
+            if len(self.points) % 2 == 0:
+                self.status = LabelStatus.Readonly
+
+    def set_status(self, new_status):
+        self.status = new_status
 
     def get_points(self):
         return self.points

@@ -165,8 +165,8 @@ def convert_tf_generator(tf_G):
     #for name, value in tf_params.items(): print(f'{name:<50s}{list(value.shape)}')
 
     # Convert params.
-    from training import networks
-    G = networks.Generator(**kwargs).eval().requires_grad_(False)
+    from training import networks_stylegan2
+    G = networks_stylegan2.Generator(**kwargs).eval().requires_grad_(False)
     # pylint: disable=unnecessary-lambda
     _populate_module_params(G,
         r'mapping\.w_avg',                                  lambda:     tf_params[f'dlatent_avg'],

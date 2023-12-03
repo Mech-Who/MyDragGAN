@@ -1,6 +1,6 @@
-import dnnlib
 import numpy as np
 import torch
+import dnnlib
 import legacy
 
 class StyleGAN(object):
@@ -51,3 +51,7 @@ class StyleGAN(object):
         img = self.G.synthesis(w, noise_mode="const", force_fp32=True)
         return img, self.G.activations[0]
     
+    def change_device(self, new_device) -> None:
+        if self.G:
+            self.G = self.G.to(new_device)
+        self.device = new_device

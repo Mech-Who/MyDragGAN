@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import QApplication, QWidget, QLabel, QMessageBox
-from PySide6.QtGui import QPainter, QPixmap
+from PySide6.QtGui import QPainter, QPixmap, QImage
 from PySide6.QtCore import QSize, QPoint
 from components.ImageLabel import ImageLabel
-
+from PIL import Image, ImageQt
 import os
 
+from pprint import pprint
 
 class ImageWidget(QWidget):
     """
@@ -28,8 +29,34 @@ class ImageWidget(QWidget):
             self.image_rate = pix_map.width() / pix_map.height()
             self.image_label.setPixmap(pix_map)
             self.compute_size()
-        except:
+        except Exception as e:
             QMessageBox.critical(self, "Error", "Load image failed!")
+            print(e)
+
+    def set_image_from_array(self, image):
+        # try:
+            # q_image = QImage(   image.data, 
+            #                             image.shape[1], 
+            #                             image.shape[0], 
+            #                             image.shape[1]*3, 
+            #                             QImage.Format_RGB888
+            #                             )
+        # pprint(image)
+        # pprint(len(image))
+        # img = Image.fromarray(image)
+        # pix_map = ImageQt.toqpixmap(img)
+        height, width, channel = image.shape
+        bytes_per_line = 3 * width
+        # pix_map = QPixmap()
+        # pix_map.loadFromData(image, 'png')
+        qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
+        pix_map = QPixmap.fromImage(qimage)
+        self.image_rate = pix_map.width() / pix_map.height()
+        self.image_label.setPixmap(pix_map)
+        self.compute_size()
+        # except Exception as e:
+        #     QMessageBox.critical(self, "Error", "Load image failed!")
+        #     print(e)
 
     def compute_size(self):
         if self.image_rate is not None:
@@ -53,6 +80,15 @@ class ImageWidget(QWidget):
         super().resizeEvent(event)
         self.compute_size()
 
+    def set_status(self, new_status):
+        self.image_label.set_status(new_status)
+
+    def get_points(self):
+        return self.image_label.get_points()
+
+    def clear_points(self):
+        self.image_label.clear_points()
+        self.update()
 
 if __name__ == "__main__":
     app = QApplication([])
