@@ -86,9 +86,11 @@ class ImageWidget(QWidget):
     def get_points(self):
         return self.image_label.get_points()
 
+    def add_points(self, points):
+        self.image_label.add_points(points)
+
     def clear_points(self):
         self.image_label.clear_points()
-        self.update()
 
 if __name__ == "__main__":
     app = QApplication([])

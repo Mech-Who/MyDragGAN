@@ -4,7 +4,7 @@ import random
 import json
 import threading
 
-from PySide6.QtCore import Signal, Slot
+from PySide6.QtCore import Signal, Slot, QPoint
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QMessageBox, QFileDialog
 from PySide6.QtGui import QPainter, QImage
 
@@ -129,24 +129,25 @@ class MainWindow(QMainWindow):
             # seed -> w -> image(torch.Tensor)
             self.W = self.model.gen_w(seed)
             img, self.init_F = self.model.gen_img(self.W)
-            print(f"type of img: {type(img)}")
-            print(f"shape of img: {img.shape}")
+            # print(f"type of img: {type(img)}")
+            # print(f"shape of img: {img.shape}")
 
             # 将生成的图片转换成可ui支持的raw data
             t_img = img.detach().cpu().permute(0, 2, 3, 1).numpy()[0]   # numpy.ndarray (512, 512, 3)
-            print(f"type of t_img 1: {type(t_img)}")
-            print(f"shape of t_img 1: {t_img.shape}")
-            print(f"t_img 1: {t_img}")
+            # print(f"type of t_img 1: {type(t_img)}")
+            # print(f"shape of t_img 1: {t_img.shape}")
+            # print(f"t_img 1: {t_img}")
             t_img = cv2.resize(t_img, (512, 512))
-            print(f"type of t_img 2: {type(t_img)}")
-            print(f"shape of t_img 2: {t_img.shape}")
+            # print(f"type of t_img 2: {type(t_img)}")
+            # print(f"shape of t_img 2: {t_img.shape}")
             # raw_img = (t_img / 2 + 0.5).clip(0, 1).reshape(-1)
             # raw_img = (t_img / 2 + 0.5).clip(0, 1)
             # raw_img = ((t_img / 2 + 0.5)*255)
             # raw_img = t_img
+            raw_img = (t_img / 2 + 0.5).clip(0, 1)
             raw_img = (t_img * 255).astype(np.uint8)
-            print(f"type of raw_img: {type(raw_img)}")
-            print(f"shape of img: {raw_img.shape}")
+            # print(f"type of raw_img: {type(raw_img)}")
+            # print(f"shape of img: {raw_img.shape}")
 
             return raw_img
         else:
@@ -154,15 +155,16 @@ class MainWindow(QMainWindow):
 
 
     def update_image(self, new_image):
-        # Convert image data (rgb) to raw_data (rgba)
-        for i in range(0, self.image_pixels):
-            rd_base, im_base = i * self.rgba_channel, i * self.rgb_channel
-            self.raw_data[rd_base:rd_base + self.rgb_channel] = array(
-                'f', new_image[im_base:im_base + self.rgb_channel]
-            )
-        self.ui.Image_Widget.set_image_from_array(self.raw_data)
+        # # Convert image data (rgb) to raw_data (rgba)
+        # for i in range(0, self.image_pixels):
+        #     rd_base, im_base = i * self.rgba_channel, i * self.rgb_channel
+        #     self.raw_data[rd_base:rd_base + self.rgb_channel] = array(
+        #         'f', new_image[im_base:im_base + self.rgb_channel]
+        #     )
+        # self.ui.Image_Widget.set_image_from_array(self.raw_data)
+        self.ui.Image_Widget.set_image_from_array(new_image)
 
-    def prepare4Drag(self, init_pts, lr=2e-3):
+    def prepare2Drag(self, init_pts, lr=2e-3):
         # 1. 备份初始图像的特征图 -> motion supervision和point tracking都需要用到
         self.F0_resized = torch_F.interpolate(  self.init_F,
                                                 size=(512, 512),
@@ -274,7 +276,7 @@ class MainWindow(QMainWindow):
         # print(f"get init_pts: {_init_pts} and tar_pts: {_tar_pts}")
 
         # 如果起始点和目标点之间的像素误差足够小，则停止
-        if torch.allclose(init_pts, tar_pts, atol=atol):
+        if torch.allclose(init_pts, tar_pts, atol=allow_error_px):
             return False, (None, None)
         self.optimizer.zero_grad()
         # print("check if init_pts and tar_pts are close enough")
@@ -302,7 +304,9 @@ class MainWindow(QMainWindow):
             new_img, F_for_point_tracking = self.model.gen_img(W_combined)
             new_img = new_img.detach().cpu().permute(0, 2, 3, 1).numpy()[0]
             new_img = cv2.resize(new_img, (512, 512))
-            new_raw_img = (new_img / 2 + 0.5).clip(0, 1).reshape(-1)
+            # new_raw_img = (new_img / 2 + 0.5).clip(0, 1).reshape(-1)
+            new_raw_img = (new_img / 2 + 0.5).clip(0, 1)
+            new_raw_img = (new_img * 255).astype(np.uint8)
 
             F_for_point_tracking_resized = torch_F.interpolate(F_for_point_tracking, size=(512, 512),
                                                                mode="bilinear", align_corners=True).detach()
@@ -318,15 +322,13 @@ class MainWindow(QMainWindow):
         points = self.ui.Image_Widget.get_points()
         if len(points) % 2 == 1:
             points = points[:-1]
-        # TODO: 可能在这一步就需要编程numpy数组，先看是否报错
-        init_pts = [[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0]
-        tar_pts = [[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1]
+        init_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0])
+        tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
         init_pts = np.vstack(init_pts)[:, ::-1].copy()
         tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
-        self.prepare_to_drag(init_pts)
+        self.prepare2Drag(init_pts)
         
         self.steps = 0
-        # TODO: 拖动时，需要更新init_pts
         while(self.isDragging):
             # 迭代一次
             status, ret = self.drag(init_pts, tar_pts)
@@ -335,12 +337,15 @@ class MainWindow(QMainWindow):
             else:
                 self.isDragging = False
                 return
-            # 显示最新的图像
-            self.update_image(image)
+            # 显示最新的图像  
+            points = []
             for i in range(init_pts.shape[0]):
-                draw_point(int(init_pts[i][1]), int(init_pts[i][0]), point_color[0])
+                points.append(QPoint(int(init_pts[i][1]), int(init_pts[i][0])))
             for i in range(tar_pts.shape[0]):
-                draw_point(int(tar_pts[i][1]), int(tar_pts[i][0]), point_color[1])
+                points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
+            self.ui.Image_Widget.clear_points()
+            self.ui.Image_Widget.add_points(points)
+            self.update_image(image)
 
             self.steps += 1
             self.ui.StepNumber_Label.setText(str(self.steps))

@@ -59,8 +59,13 @@ class ImageLabel(QLabel):
     def get_points(self):
         return self.points
 
+    def add_points(self, points):
+        self.points.extend(points)
+        self.update()
+
     def clear_points(self):
         self.points = []
+        self.update()
 
     def mouseReleaseEvent(self, event):
         pass
