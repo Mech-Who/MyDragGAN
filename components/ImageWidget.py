@@ -43,14 +43,15 @@ class ImageWidget(QWidget):
             #                             )
         # pprint(image)
         # pprint(len(image))
-        # img = Image.fromarray(image)
-        # pix_map = ImageQt.toqpixmap(img)
-        height, width, channel = image.shape
-        bytes_per_line = 3 * width
-        # pix_map = QPixmap()
-        # pix_map.loadFromData(image, 'png')
-        qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
-        pix_map = QPixmap.fromImage(qimage)
+
+        # height, width, channel = image.shape
+        # bytes_per_line = 3 * width
+
+        # qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
+        img = image.cpu().numpy()
+        img = Image.fromarray(img)
+        # pix_map = QPixmap.fromImage(qimage)
+        pix_map = img.toqpixmap()
         self.image_rate = pix_map.width() / pix_map.height()
         self.image_label.setPixmap(pix_map)
         self.compute_size()

@@ -12,6 +12,7 @@ sys.path.append('stylegan2_ada')
 
 from ui.Ui_MainWindow import Ui_DragGAN
 from components.LabelStatus import LabelStatus
+from components.ConfigMainWindow import ConfigMainWindow
 # from model import StyleGAN
 from stylegan2_ada.model import StyleGAN
 import utils as utils
@@ -25,15 +26,12 @@ from array import array
 
 
 
-class MainWindow(QMainWindow):
+class MainWindow(ConfigMainWindow):
     def __init__(self):
-        super().__init__()
+        super().__init__(os.path.join(os.getcwd(), "config.json"))
         self.ui = Ui_DragGAN()
         self.ui.setupUi(self)
         self.setWindowTitle(self.tr("DragGAN"))
-
-        # 配置文件
-        self.config_path = os.path.join(os.getcwd(), "config.json")
 
         #### model部分初始化 ####
         # 设置device可选值并设默认值
@@ -67,10 +65,10 @@ class MainWindow(QMainWindow):
         self.min_radius = 0.1
         self.max_radius = 10
         # 设置Lambda默认值与阈值
-        self.lambda_ = 0.5
+        self.lambda_ = 10
         self.ui.Lambda_LineEdit.setText(str(self.lambda_))
-        self.min_lambda = 0
-        self.max_lambda = 10
+        self.min_lambda = 5
+        self.max_lambda = 20
 
         self.isDragging = False
 
@@ -85,32 +83,6 @@ class MainWindow(QMainWindow):
         self.image_pixels = self.image_height * self.image_width
         self.raw_data_size = self.image_width * self.image_height * self.rgba_channel
         self.raw_data = array('f', [1] * self.raw_data_size)
-
-    def getConfig(self, key=None):
-        config = None
-        with open(self.config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
-        if key:
-            try:
-                value = config[key]
-            except KeyError:
-                raise KeyError(f"key: {key} not found in config.json")
-            return value
-        return config
-    
-    def setConfig(self, config):
-        with open(self.config_path, "w", encoding="utf-8") as f:
-            json.dump(config, f)
-
-    def addConfig(self, key, value):
-        config = self.getConfig()
-        config[key] = value
-        self.setConfig(config)
-    
-    def delConfig(self, key):
-        config = self.getConfig()
-        del config[key]
-        self.setConfig(config)
 
     def change_device(self, new_device):
         if new_device != self.device:
@@ -129,39 +101,20 @@ class MainWindow(QMainWindow):
             # seed -> w -> image(torch.Tensor)
             self.W = self.model.gen_w(seed)
             img, self.init_F = self.model.gen_img(self.W)
-            # print(f"type of img: {type(img)}")
-            # print(f"shape of img: {img.shape}")
 
-            # 将生成的图片转换成可ui支持的raw data
-            t_img = img.detach().cpu().permute(0, 2, 3, 1).numpy()[0]   # numpy.ndarray (512, 512, 3)
-            # print(f"type of t_img 1: {type(t_img)}")
-            # print(f"shape of t_img 1: {t_img.shape}")
-            # print(f"t_img 1: {t_img}")
-            t_img = cv2.resize(t_img, (512, 512))
-            # print(f"type of t_img 2: {type(t_img)}")
-            # print(f"shape of t_img 2: {t_img.shape}")
-            # raw_img = (t_img / 2 + 0.5).clip(0, 1).reshape(-1)
-            # raw_img = (t_img / 2 + 0.5).clip(0, 1)
-            # raw_img = ((t_img / 2 + 0.5)*255)
-            # raw_img = t_img
-            raw_img = (t_img / 2 + 0.5).clip(0, 1)
-            raw_img = (t_img * 255).astype(np.uint8)
-            # print(f"type of raw_img: {type(raw_img)}")
-            # print(f"shape of img: {raw_img.shape}")
+            img = img[0]
+            img_scale_db = 0
+            img = img * (10 ** (img_scale_db / 20))
+            img = (img * 127.5 + 128).clamp(0, 255).to(torch.uint8).permute(1, 2, 0)
 
-            return raw_img
+            print(f"image data: {img}")
+
+            return img
         else:
             return None
 
 
     def update_image(self, new_image):
-        # # Convert image data (rgb) to raw_data (rgba)
-        # for i in range(0, self.image_pixels):
-        #     rd_base, im_base = i * self.rgba_channel, i * self.rgb_channel
-        #     self.raw_data[rd_base:rd_base + self.rgb_channel] = array(
-        #         'f', new_image[im_base:im_base + self.rgb_channel]
-        #     )
-        # self.ui.Image_Widget.set_image_from_array(self.raw_data)
         self.ui.Image_Widget.set_image_from_array(new_image)
 
     def prepare2Drag(self, init_pts, lr=2e-3):
@@ -170,12 +123,10 @@ class MainWindow(QMainWindow):
                                                 size=(512, 512),
                                                 mode="bilinear",
                                                 align_corners=True).detach().clone()
-        # print("set F0_resized")
 
         # 2. 备份初始点坐标 -> point tracking
         temp_init_pts_0 = copy.deepcopy(init_pts)
         self.init_pts_0 = torch.from_numpy(temp_init_pts_0).float().to(self.device)
-        # print("backup for points")
 
         # 3. 将w向量的部分特征设置为可训练
         temp_W = self.W.cpu().numpy().copy()
@@ -184,18 +135,17 @@ class MainWindow(QMainWindow):
 
         self.W_layers_to_optimize = self.W[:, :6, :].detach().clone().requires_grad_(True)
         self.W_layers_to_fixed = self.W[:, 6:, :].detach().clone().requires_grad_(False)
-        # print("set part of W as trainable")
 
         # 4. 初始化优化器
         self.optimizer = torch.optim.Adam([self.W_layers_to_optimize], lr=lr)
-        # print("init optimizer")
 
 # 计算motion supervision loss, 用来更新w，使图像中目标点邻域的特征与起始点领域的特征靠近
     def motion_supervision( self, 
                             F,
                             init_pts, 
                             tar_pts, 
-                            r1=3):
+                            r1=3,
+                            mask=None):
         
         n = init_pts.shape[0]
         loss = 0.0
@@ -233,7 +183,12 @@ class MainWindow(QMainWindow):
 
             # 监督移动前后的特征要一致
             loss += torch_F.l1_loss(F_qi.detach(), F_qi_plus_di)
-            # 同时监督特征图上, mask外的特征要一致 暂不支持
+            # 同时监督特征图上, mask外的特征要一致 TODO
+            if mask is not None:
+                if mask.min()==0 and mask.max()==1:
+                    mask_array = mask.bool().to(self.device).unsqueeze(0).unsqueeze(0)
+                    loss_add = torch_F.l1_loss(self.init_F*mask_array, self.F0_resized*mask_array)
+                    loss += loss_add * self.lambda_
         
         return loss
 
@@ -242,7 +197,8 @@ class MainWindow(QMainWindow):
     def point_tracking( self, 
                         F,
                         init_pts, 
-                        r2):
+                        r2
+                        ):
         n = init_pts.shape[0]
         new_init_pts = torch.zeros_like(init_pts)
         '''
@@ -302,11 +258,11 @@ class MainWindow(QMainWindow):
         with torch.no_grad():
             # 以上过程会优化一次latent, 直接用新的latent生成图像，用于中间过程的显示
             new_img, F_for_point_tracking = self.model.gen_img(W_combined)
-            new_img = new_img.detach().cpu().permute(0, 2, 3, 1).numpy()[0]
-            new_img = cv2.resize(new_img, (512, 512))
-            # new_raw_img = (new_img / 2 + 0.5).clip(0, 1).reshape(-1)
-            new_raw_img = (new_img / 2 + 0.5).clip(0, 1)
-            new_raw_img = (new_img * 255).astype(np.uint8)
+            
+            new_img = new_img[0]
+            img_scale_db = 0
+            new_img = new_img * (10 ** (img_scale_db / 20))
+            new_img = (new_img * 127.5 + 128).clamp(0, 255).to(torch.uint8).permute(1, 2, 0)
 
             F_for_point_tracking_resized = torch_F.interpolate(F_for_point_tracking, size=(512, 512),
                                                                mode="bilinear", align_corners=True).detach()
@@ -315,7 +271,7 @@ class MainWindow(QMainWindow):
         print('\n')
         # print("update init_pts as Point Tracking")
 
-        return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_raw_img)
+        return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img)
         # return True, (np.array([0, 0]), np.array([1, 1]), np.array([0, 1]))
 
     def drag_thread(self):
@@ -452,7 +408,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def on_Minus4Radius_PushButton_clicked(self):
-        self.radius = int(self.ui.Radius_LineEdit.text())
+        self.radius = float(self.ui.Radius_LineEdit.text())
         self.radius -= 0.1
         self.ui.Radius_LineEdit.setText(str(self.radius))
 
