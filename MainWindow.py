@@ -27,6 +27,11 @@ from array import array
 
 
 class MainWindow(ConfigMainWindow):
+
+    DEFAULT_STEP_SIZE = 2e-3
+    DEFAULT_R1 = 3
+    DEFAULT_R2 = 13
+
     def __init__(self):
         super().__init__(os.path.join(os.getcwd(), "config.json"))
         self.ui = Ui_DragGAN()
@@ -54,9 +59,8 @@ class MainWindow(ConfigMainWindow):
         self.min_seed = 0
         self.max_seed = 65535
 
-        # 设置默认步长
-        self.step_size = 2e-3
-        self.ui.StepSize_LineEdit.setText(str(self.step_size))
+        self.random_seed = False
+        self.ui.RandomSeed_CheckBox.setChecked(self.random_seed)
 
         self.w_plus = True
         self.ui.Wp_CheckBox.setChecked(self.w_plus)
@@ -75,6 +79,15 @@ class MainWindow(ConfigMainWindow):
         self.max_lambda = 20
 
         self.isDragging = False
+
+        # 设置默认步长
+        self.step_size = self.DEFAULT_STEP_SIZE
+        self.ui.StepSize_LineEdit.setText(str(self.step_size))
+        # 初始化R1和R2
+        self.r1 = self.DEFAULT_R1
+        self.ui.R1_LineEdit.setText(str(self.r1))
+        self.r2 = self.DEFAULT_R2
+        self.ui.R2_LineEdit.setText(str(self.r2))
 
         self.steps = 0
         self.ui.StepNumber_Label.setText(str(self.steps))
@@ -349,14 +362,17 @@ class MainWindow(ConfigMainWindow):
             self.ui.Seed_LineEdit.setText(str(self.seed))
 
     @Slot()
-    def on_StepSize_LineEdit_editingFinished(self):
-        self.step_size = float(self.ui.StepSize_LineEdit.text())
-        print(f"current step_size: {self.step_size}")
-
-    @Slot()
-    def on_Reset_PushButton_clicked(self):
-        self.step_size = 0.5
-        self.ui.StepSize_LineEdit.setText(str(self.step_size))
+    def on_RandomSeed_CheckBox_stateChanged(self):
+        if self.ui.RandomSeed_CheckBox.isChecked():
+            self.random_seed = True
+            self.ui.Plus4Seed_PushButton.setDisabled(True)
+            self.ui.Minus4Seed_PushButton.setDisabled(True)
+            self.seed = random.randint(self.min_seed, self.max_seed)
+            self.ui.Seed_LineEdit.setText(str(self.seed))
+        else:
+            self.random_seed = False
+            self.ui.Plus4Seed_PushButton.setEnabled(True)
+            self.ui.Minus4Seed_PushButton.setEnabled(True)
 
     @Slot()
     def on_W_CheckBox_stateChanged(self):
@@ -413,6 +429,36 @@ class MainWindow(ConfigMainWindow):
     def on_Stop_PushButton_clicked(self):
         print("stop drag")
         self.isDragging = False
+
+    @Slot()
+    def on_StepSize_LineEdit_editingFinished(self):
+        self.step_size = float(self.ui.StepSize_LineEdit.text())
+        print(f"current step_size: {self.step_size}")
+
+    @Slot()
+    def on_Reset4StepSize_PushButton_clicked(self):
+        self.step_size = self.DEFAULT_STEP_SIZE
+        self.ui.StepSize_LineEdit.setText(str(self.step_size))
+
+    @Slot()
+    def on_R1_LineEdit_editingFinished(self):
+        self.r1 = float(self.ui.R1_LineEdit.text())
+        print(f"current r1: {self.r1}")
+
+    @Slot()
+    def on_Reset4R1_PushButton_clicked(self):
+        self.r1 = self.DEFAULT_R1
+        self.ui.R1_LineEdit.setText(str(self.r1))
+
+    @Slot()
+    def on_R2_LineEdit_editingFinished(self):
+        self.r2 = float(self.ui.R2_LineEdit.text())
+        print(f"current r2: {self.r2}")
+
+    @Slot()
+    def on_Reset4R2_PushButton_clicked(self):
+        self.r2 = self.DEFAULT_R2
+        self.ui.R2_LineEdit.setText(str(self.r2))
 
     @Slot()
     def on_FlexibleArea_PushButton_clicked(self):

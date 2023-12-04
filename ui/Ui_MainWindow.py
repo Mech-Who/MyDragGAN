@@ -26,12 +26,17 @@ class Ui_DragGAN(object):
     def setupUi(self, DragGAN):
         if not DragGAN.objectName():
             DragGAN.setObjectName(u"DragGAN")
-        DragGAN.resize(894, 572)
+        DragGAN.resize(971, 619)
         self.centralwidget = QWidget(DragGAN)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout = QGridLayout(self.centralwidget)
         self.gridLayout.setSpacing(6)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.Image_Widget = ImageWidget(self.centralwidget)
+        self.Image_Widget.setObjectName(u"Image_Widget")
+
+        self.gridLayout.addWidget(self.Image_Widget, 0, 1, 3, 1)
+
         self.model = QWidget(self.centralwidget)
         self.model.setObjectName(u"model")
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
@@ -41,11 +46,73 @@ class Ui_DragGAN(object):
         self.model.setSizePolicy(sizePolicy)
         self.gridLayout_2 = QGridLayout(self.model)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.Browse_PushButton = QPushButton(self.model)
+        self.Browse_PushButton.setObjectName(u"Browse_PushButton")
+
+        self.gridLayout_2.addWidget(self.Browse_PushButton, 2, 3, 1, 4)
+
         self.Minus4Seed_PushButton = QPushButton(self.model)
         self.Minus4Seed_PushButton.setObjectName(u"Minus4Seed_PushButton")
         self.Minus4Seed_PushButton.setMinimumSize(QSize(75, 0))
 
         self.gridLayout_2.addWidget(self.Minus4Seed_PushButton, 3, 2, 1, 1)
+
+        self.Recent_PushButton = QPushButton(self.model)
+        self.Recent_PushButton.setObjectName(u"Recent_PushButton")
+
+        self.gridLayout_2.addWidget(self.Recent_PushButton, 2, 1, 1, 2)
+
+        self.Wp_CheckBox = QCheckBox(self.model)
+        self.buttonGroup = QButtonGroup(DragGAN)
+        self.buttonGroup.setObjectName(u"buttonGroup")
+        self.buttonGroup.addButton(self.Wp_CheckBox)
+        self.Wp_CheckBox.setObjectName(u"Wp_CheckBox")
+
+        self.gridLayout_2.addWidget(self.Wp_CheckBox, 5, 2, 1, 1)
+
+        self.Device_ComboBox = QComboBox(self.model)
+        self.Device_ComboBox.setObjectName(u"Device_ComboBox")
+
+        self.gridLayout_2.addWidget(self.Device_ComboBox, 0, 1, 1, 6)
+
+        self.W_CheckBox = QCheckBox(self.model)
+        self.buttonGroup.addButton(self.W_CheckBox)
+        self.W_CheckBox.setObjectName(u"W_CheckBox")
+        self.W_CheckBox.setEnabled(True)
+        self.W_CheckBox.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.W_CheckBox, 5, 1, 1, 1)
+
+        self.Generate_PushButton = QPushButton(self.model)
+        self.Generate_PushButton.setObjectName(u"Generate_PushButton")
+
+        self.gridLayout_2.addWidget(self.Generate_PushButton, 6, 1, 1, 1)
+
+        self.Seed_LineEdit = QLineEdit(self.model)
+        self.Seed_LineEdit.setObjectName(u"Seed_LineEdit")
+        self.Seed_LineEdit.setEnabled(False)
+
+        self.gridLayout_2.addWidget(self.Seed_LineEdit, 3, 1, 1, 1)
+
+        self.Pickle_LineEdit = QLineEdit(self.model)
+        self.Pickle_LineEdit.setObjectName(u"Pickle_LineEdit")
+        self.Pickle_LineEdit.setEnabled(False)
+
+        self.gridLayout_2.addWidget(self.Pickle_LineEdit, 1, 1, 1, 6)
+
+        self.Device_Label = QLabel(self.model)
+        self.Device_Label.setObjectName(u"Device_Label")
+
+        self.gridLayout_2.addWidget(self.Device_Label, 0, 0, 1, 1)
+
+        self.Latent_Label = QLabel(self.model)
+        self.Latent_Label.setObjectName(u"Latent_Label")
+
+        self.gridLayout_2.addWidget(self.Latent_Label, 3, 0, 1, 1)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+        self.gridLayout_2.addItem(self.verticalSpacer_3, 7, 2, 1, 1)
 
         self.Plus4Seed_PushButton = QPushButton(self.model)
         self.Plus4Seed_PushButton.setObjectName(u"Plus4Seed_PushButton")
@@ -58,87 +125,17 @@ class Ui_DragGAN(object):
 
         self.gridLayout_2.addWidget(self.Pickle_Label, 1, 0, 1, 1)
 
-        self.StepSize_LineEdit = QLineEdit(self.model)
-        self.StepSize_LineEdit.setObjectName(u"StepSize_LineEdit")
-
-        self.gridLayout_2.addWidget(self.StepSize_LineEdit, 5, 1, 1, 2)
-
-        self.Wp_CheckBox = QCheckBox(self.model)
-        self.buttonGroup = QButtonGroup(DragGAN)
-        self.buttonGroup.setObjectName(u"buttonGroup")
-        self.buttonGroup.addButton(self.Wp_CheckBox)
-        self.Wp_CheckBox.setObjectName(u"Wp_CheckBox")
-
-        self.gridLayout_2.addWidget(self.Wp_CheckBox, 6, 2, 1, 1)
-
-        self.StepSize_Label = QLabel(self.model)
-        self.StepSize_Label.setObjectName(u"StepSize_Label")
-
-        self.gridLayout_2.addWidget(self.StepSize_Label, 5, 4, 1, 3)
-
-        self.Device_ComboBox = QComboBox(self.model)
-        self.Device_ComboBox.setObjectName(u"Device_ComboBox")
-
-        self.gridLayout_2.addWidget(self.Device_ComboBox, 0, 1, 1, 6)
-
-        self.Recent_PushButton = QPushButton(self.model)
-        self.Recent_PushButton.setObjectName(u"Recent_PushButton")
-
-        self.gridLayout_2.addWidget(self.Recent_PushButton, 2, 1, 1, 2)
-
-        self.W_CheckBox = QCheckBox(self.model)
-        self.buttonGroup.addButton(self.W_CheckBox)
-        self.W_CheckBox.setObjectName(u"W_CheckBox")
-        self.W_CheckBox.setEnabled(True)
-        self.W_CheckBox.setChecked(True)
-
-        self.gridLayout_2.addWidget(self.W_CheckBox, 6, 1, 1, 1)
-
-        self.Latent_Label = QLabel(self.model)
-        self.Latent_Label.setObjectName(u"Latent_Label")
-
-        self.gridLayout_2.addWidget(self.Latent_Label, 3, 0, 1, 1)
-
         self.Seed_Label = QLabel(self.model)
         self.Seed_Label.setObjectName(u"Seed_Label")
 
         self.gridLayout_2.addWidget(self.Seed_Label, 3, 4, 1, 1)
 
-        self.Generate_PushButton = QPushButton(self.model)
-        self.Generate_PushButton.setObjectName(u"Generate_PushButton")
+        self.RandomSeed_CheckBox = QCheckBox(self.model)
+        self.RandomSeed_CheckBox.setObjectName(u"RandomSeed_CheckBox")
+        self.RandomSeed_CheckBox.setEnabled(True)
+        self.RandomSeed_CheckBox.setChecked(False)
 
-        self.gridLayout_2.addWidget(self.Generate_PushButton, 7, 1, 1, 1)
-
-        self.Reset_PushButton = QPushButton(self.model)
-        self.Reset_PushButton.setObjectName(u"Reset_PushButton")
-
-        self.gridLayout_2.addWidget(self.Reset_PushButton, 5, 3, 1, 1)
-
-        self.Seed_LineEdit = QLineEdit(self.model)
-        self.Seed_LineEdit.setObjectName(u"Seed_LineEdit")
-        self.Seed_LineEdit.setEnabled(False)
-
-        self.gridLayout_2.addWidget(self.Seed_LineEdit, 3, 1, 1, 1)
-
-        self.Device_Label = QLabel(self.model)
-        self.Device_Label.setObjectName(u"Device_Label")
-
-        self.gridLayout_2.addWidget(self.Device_Label, 0, 0, 1, 1)
-
-        self.Browse_PushButton = QPushButton(self.model)
-        self.Browse_PushButton.setObjectName(u"Browse_PushButton")
-
-        self.gridLayout_2.addWidget(self.Browse_PushButton, 2, 3, 1, 4)
-
-        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.gridLayout_2.addItem(self.verticalSpacer_3, 8, 2, 1, 1)
-
-        self.Pickle_LineEdit = QLineEdit(self.model)
-        self.Pickle_LineEdit.setObjectName(u"Pickle_LineEdit")
-        self.Pickle_LineEdit.setEnabled(False)
-
-        self.gridLayout_2.addWidget(self.Pickle_LineEdit, 1, 1, 1, 6)
+        self.gridLayout_2.addWidget(self.RandomSeed_CheckBox, 4, 1, 1, 1)
 
         self.gridLayout_2.setRowStretch(0, 1)
         self.gridLayout_2.setColumnStretch(0, 2)
@@ -149,111 +146,156 @@ class Ui_DragGAN(object):
         self.drag.setObjectName(u"drag")
         self.gridLayout_3 = QGridLayout(self.drag)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.Mask_Label = QLabel(self.drag)
-        self.Mask_Label.setObjectName(u"Mask_Label")
+        self.AddPoint_PushButton = QPushButton(self.drag)
+        self.AddPoint_PushButton.setObjectName(u"AddPoint_PushButton")
 
-        self.gridLayout_3.addWidget(self.Mask_Label, 3, 0, 1, 1)
-
-        self.Stop_PushButton = QPushButton(self.drag)
-        self.Stop_PushButton.setObjectName(u"Stop_PushButton")
-
-        self.gridLayout_3.addWidget(self.Stop_PushButton, 1, 4, 1, 1)
-
-        self.Minus4Radius_PushButton = QPushButton(self.drag)
-        self.Minus4Radius_PushButton.setObjectName(u"Minus4Radius_PushButton")
-
-        self.gridLayout_3.addWidget(self.Minus4Radius_PushButton, 5, 2, 1, 1)
-
-        self.Minus4Lambda_PushButton = QPushButton(self.drag)
-        self.Minus4Lambda_PushButton.setObjectName(u"Minus4Lambda_PushButton")
-
-        self.gridLayout_3.addWidget(self.Minus4Lambda_PushButton, 6, 2, 1, 1)
-
-        self.ResetPoint_PushButton = QPushButton(self.drag)
-        self.ResetPoint_PushButton.setObjectName(u"ResetPoint_PushButton")
-
-        self.gridLayout_3.addWidget(self.ResetPoint_PushButton, 0, 4, 1, 1)
-
-        self.StepNumber_Label = QLabel(self.drag)
-        self.StepNumber_Label.setObjectName(u"StepNumber_Label")
-
-        self.gridLayout_3.addWidget(self.StepNumber_Label, 2, 2, 1, 3)
-
-        self.Lambda_LineEdit = QLineEdit(self.drag)
-        self.Lambda_LineEdit.setObjectName(u"Lambda_LineEdit")
-        self.Lambda_LineEdit.setEnabled(False)
-
-        self.gridLayout_3.addWidget(self.Lambda_LineEdit, 6, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.AddPoint_PushButton, 0, 1, 1, 3)
 
         self.Drag_Label = QLabel(self.drag)
         self.Drag_Label.setObjectName(u"Drag_Label")
 
         self.gridLayout_3.addWidget(self.Drag_Label, 0, 0, 1, 1)
 
-        self.Radius_LineEdit = QLineEdit(self.drag)
-        self.Radius_LineEdit.setObjectName(u"Radius_LineEdit")
-        self.Radius_LineEdit.setEnabled(False)
+        self.StepSize_LineEdit = QLineEdit(self.drag)
+        self.StepSize_LineEdit.setObjectName(u"StepSize_LineEdit")
 
-        self.gridLayout_3.addWidget(self.Radius_LineEdit, 5, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.StepSize_LineEdit, 4, 1, 1, 2)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.Stop_PushButton = QPushButton(self.drag)
+        self.Stop_PushButton.setObjectName(u"Stop_PushButton")
 
-        self.gridLayout_3.addItem(self.verticalSpacer_2, 7, 2, 1, 1)
+        self.gridLayout_3.addWidget(self.Stop_PushButton, 1, 4, 1, 1)
+
+        self.Drag_Label_5 = QLabel(self.drag)
+        self.Drag_Label_5.setObjectName(u"Drag_Label_5")
+
+        self.gridLayout_3.addWidget(self.Drag_Label_5, 11, 4, 1, 1)
+
+        self.ResetPoint_PushButton = QPushButton(self.drag)
+        self.ResetPoint_PushButton.setObjectName(u"ResetPoint_PushButton")
+
+        self.gridLayout_3.addWidget(self.ResetPoint_PushButton, 0, 4, 1, 1)
+
+        self.Minus4Lambda_PushButton = QPushButton(self.drag)
+        self.Minus4Lambda_PushButton.setObjectName(u"Minus4Lambda_PushButton")
+
+        self.gridLayout_3.addWidget(self.Minus4Lambda_PushButton, 11, 2, 1, 1)
 
         self.Steps_Label = QLabel(self.drag)
         self.Steps_Label.setObjectName(u"Steps_Label")
 
-        self.gridLayout_3.addWidget(self.Steps_Label, 2, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.Steps_Label, 7, 1, 1, 1)
 
-        self.Plus4Radius_PushButton = QPushButton(self.drag)
-        self.Plus4Radius_PushButton.setObjectName(u"Plus4Radius_PushButton")
+        self.R1_LineEdit = QLineEdit(self.drag)
+        self.R1_LineEdit.setObjectName(u"R1_LineEdit")
 
-        self.gridLayout_3.addWidget(self.Plus4Radius_PushButton, 5, 3, 1, 1)
-
-        self.Plus4Lambda_PushButton = QPushButton(self.drag)
-        self.Plus4Lambda_PushButton.setObjectName(u"Plus4Lambda_PushButton")
-
-        self.gridLayout_3.addWidget(self.Plus4Lambda_PushButton, 6, 3, 1, 1)
+        self.gridLayout_3.addWidget(self.R1_LineEdit, 5, 1, 1, 2)
 
         self.Start_PushButton = QPushButton(self.drag)
         self.Start_PushButton.setObjectName(u"Start_PushButton")
 
         self.gridLayout_3.addWidget(self.Start_PushButton, 1, 1, 1, 3)
 
-        self.AddPoint_PushButton = QPushButton(self.drag)
-        self.AddPoint_PushButton.setObjectName(u"AddPoint_PushButton")
+        self.FixedArea_PushButton = QPushButton(self.drag)
+        self.FixedArea_PushButton.setObjectName(u"FixedArea_PushButton")
 
-        self.gridLayout_3.addWidget(self.AddPoint_PushButton, 0, 1, 1, 3)
+        self.gridLayout_3.addWidget(self.FixedArea_PushButton, 8, 3, 1, 1)
 
-        self.Drag_Label_4 = QLabel(self.drag)
-        self.Drag_Label_4.setObjectName(u"Drag_Label_4")
+        self.StepNumber_Label = QLabel(self.drag)
+        self.StepNumber_Label.setObjectName(u"StepNumber_Label")
 
-        self.gridLayout_3.addWidget(self.Drag_Label_4, 5, 4, 1, 1)
+        self.gridLayout_3.addWidget(self.StepNumber_Label, 7, 2, 1, 3)
 
-        self.Drag_Label_5 = QLabel(self.drag)
-        self.Drag_Label_5.setObjectName(u"Drag_Label_5")
+        self.StepSize_Label = QLabel(self.drag)
+        self.StepSize_Label.setObjectName(u"StepSize_Label")
 
-        self.gridLayout_3.addWidget(self.Drag_Label_5, 6, 4, 1, 1)
+        self.gridLayout_3.addWidget(self.StepSize_Label, 4, 3, 1, 1)
 
-        self.FlexibleArea_PushButton = QPushButton(self.drag)
-        self.FlexibleArea_PushButton.setObjectName(u"FlexibleArea_PushButton")
+        self.Mask_Label = QLabel(self.drag)
+        self.Mask_Label.setObjectName(u"Mask_Label")
 
-        self.gridLayout_3.addWidget(self.FlexibleArea_PushButton, 3, 1, 1, 2)
+        self.gridLayout_3.addWidget(self.Mask_Label, 8, 0, 1, 1)
 
-        self.ResetMask_PushButton = QPushButton(self.drag)
-        self.ResetMask_PushButton.setObjectName(u"ResetMask_PushButton")
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.gridLayout_3.addWidget(self.ResetMask_PushButton, 4, 1, 1, 2)
+        self.gridLayout_3.addItem(self.verticalSpacer_2, 12, 2, 1, 1)
 
         self.ShowMask_CheckBox = QCheckBox(self.drag)
         self.ShowMask_CheckBox.setObjectName(u"ShowMask_CheckBox")
 
-        self.gridLayout_3.addWidget(self.ShowMask_CheckBox, 4, 3, 1, 1)
+        self.gridLayout_3.addWidget(self.ShowMask_CheckBox, 9, 3, 1, 1)
 
-        self.FixedArea_PushButton = QPushButton(self.drag)
-        self.FixedArea_PushButton.setObjectName(u"FixedArea_PushButton")
+        self.Drag_Label_4 = QLabel(self.drag)
+        self.Drag_Label_4.setObjectName(u"Drag_Label_4")
 
-        self.gridLayout_3.addWidget(self.FixedArea_PushButton, 3, 3, 1, 1)
+        self.gridLayout_3.addWidget(self.Drag_Label_4, 10, 4, 1, 1)
+
+        self.Reset4R1_PushButton = QPushButton(self.drag)
+        self.Reset4R1_PushButton.setObjectName(u"Reset4R1_PushButton")
+
+        self.gridLayout_3.addWidget(self.Reset4R1_PushButton, 5, 4, 1, 1)
+
+        self.R1_Label = QLabel(self.drag)
+        self.R1_Label.setObjectName(u"R1_Label")
+
+        self.gridLayout_3.addWidget(self.R1_Label, 5, 3, 1, 1)
+
+        self.Plus4Lambda_PushButton = QPushButton(self.drag)
+        self.Plus4Lambda_PushButton.setObjectName(u"Plus4Lambda_PushButton")
+
+        self.gridLayout_3.addWidget(self.Plus4Lambda_PushButton, 11, 3, 1, 1)
+
+        self.Reset4StepSize_PushButton = QPushButton(self.drag)
+        self.Reset4StepSize_PushButton.setObjectName(u"Reset4StepSize_PushButton")
+
+        self.gridLayout_3.addWidget(self.Reset4StepSize_PushButton, 4, 4, 1, 1)
+
+        self.Lambda_LineEdit = QLineEdit(self.drag)
+        self.Lambda_LineEdit.setObjectName(u"Lambda_LineEdit")
+        self.Lambda_LineEdit.setEnabled(False)
+
+        self.gridLayout_3.addWidget(self.Lambda_LineEdit, 11, 1, 1, 1)
+
+        self.ResetMask_PushButton = QPushButton(self.drag)
+        self.ResetMask_PushButton.setObjectName(u"ResetMask_PushButton")
+
+        self.gridLayout_3.addWidget(self.ResetMask_PushButton, 9, 1, 1, 2)
+
+        self.Radius_LineEdit = QLineEdit(self.drag)
+        self.Radius_LineEdit.setObjectName(u"Radius_LineEdit")
+        self.Radius_LineEdit.setEnabled(False)
+
+        self.gridLayout_3.addWidget(self.Radius_LineEdit, 10, 1, 1, 1)
+
+        self.FlexibleArea_PushButton = QPushButton(self.drag)
+        self.FlexibleArea_PushButton.setObjectName(u"FlexibleArea_PushButton")
+
+        self.gridLayout_3.addWidget(self.FlexibleArea_PushButton, 8, 1, 1, 2)
+
+        self.Plus4Radius_PushButton = QPushButton(self.drag)
+        self.Plus4Radius_PushButton.setObjectName(u"Plus4Radius_PushButton")
+
+        self.gridLayout_3.addWidget(self.Plus4Radius_PushButton, 10, 3, 1, 1)
+
+        self.Minus4Radius_PushButton = QPushButton(self.drag)
+        self.Minus4Radius_PushButton.setObjectName(u"Minus4Radius_PushButton")
+
+        self.gridLayout_3.addWidget(self.Minus4Radius_PushButton, 10, 2, 1, 1)
+
+        self.Reset4R2_PushButton = QPushButton(self.drag)
+        self.Reset4R2_PushButton.setObjectName(u"Reset4R2_PushButton")
+
+        self.gridLayout_3.addWidget(self.Reset4R2_PushButton, 6, 4, 1, 1)
+
+        self.R2_Label = QLabel(self.drag)
+        self.R2_Label.setObjectName(u"R2_Label")
+
+        self.gridLayout_3.addWidget(self.R2_Label, 6, 3, 1, 1)
+
+        self.R2_LineEdit = QLineEdit(self.drag)
+        self.R2_LineEdit.setObjectName(u"R2_LineEdit")
+
+        self.gridLayout_3.addWidget(self.R2_LineEdit, 6, 1, 1, 2)
 
         self.gridLayout_3.setColumnStretch(0, 4)
         self.gridLayout_3.setColumnStretch(1, 4)
@@ -263,19 +305,14 @@ class Ui_DragGAN(object):
 
         self.gridLayout.addWidget(self.drag, 1, 0, 1, 1)
 
-        self.Image_Widget = ImageWidget(self.centralwidget)
-        self.Image_Widget.setObjectName(u"Image_Widget")
-
-        self.gridLayout.addWidget(self.Image_Widget, 0, 1, 2, 1)
-
-        self.gridLayout.setRowStretch(0, 1)
-        self.gridLayout.setRowStretch(1, 1)
+        self.gridLayout.setRowStretch(0, 7)
+        self.gridLayout.setRowStretch(1, 10)
         self.gridLayout.setColumnStretch(0, 1)
         self.gridLayout.setColumnStretch(1, 3)
         DragGAN.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(DragGAN)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 894, 22))
+        self.menubar.setGeometry(QRect(0, 0, 971, 21))
         DragGAN.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(DragGAN)
         self.statusbar.setObjectName(u"statusbar")
@@ -288,39 +325,44 @@ class Ui_DragGAN(object):
 
     def retranslateUi(self, DragGAN):
         DragGAN.setWindowTitle(QCoreApplication.translate("DragGAN", u"MainWindow", None))
+        self.Browse_PushButton.setText(QCoreApplication.translate("DragGAN", u"Browse...", None))
         self.Minus4Seed_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
-        self.Plus4Seed_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
-        self.Pickle_Label.setText(QCoreApplication.translate("DragGAN", u"Pickle", None))
-        self.Wp_CheckBox.setText(QCoreApplication.translate("DragGAN", u"W+", None))
-        self.StepSize_Label.setText(QCoreApplication.translate("DragGAN", u"Step Size", None))
         self.Recent_PushButton.setText(QCoreApplication.translate("DragGAN", u"Recent...", None))
+        self.Wp_CheckBox.setText(QCoreApplication.translate("DragGAN", u"W+", None))
         self.W_CheckBox.setText(QCoreApplication.translate("DragGAN", u"W", None))
-        self.Latent_Label.setText(QCoreApplication.translate("DragGAN", u"Latent", None))
-        self.Seed_Label.setText(QCoreApplication.translate("DragGAN", u"Seed", None))
         self.Generate_PushButton.setText(QCoreApplication.translate("DragGAN", u"Generate", None))
-        self.Reset_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset", None))
         self.Seed_LineEdit.setText(QCoreApplication.translate("DragGAN", u"0", None))
         self.Device_Label.setText(QCoreApplication.translate("DragGAN", u"Device", None))
-        self.Browse_PushButton.setText(QCoreApplication.translate("DragGAN", u"Browse...", None))
-        self.Mask_Label.setText(QCoreApplication.translate("DragGAN", u"Mask", None))
-        self.Stop_PushButton.setText(QCoreApplication.translate("DragGAN", u"Stop", None))
-        self.Minus4Radius_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
-        self.Minus4Lambda_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
-        self.ResetPoint_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset point", None))
-        self.StepNumber_Label.setText(QCoreApplication.translate("DragGAN", u"0", None))
-        self.Lambda_LineEdit.setText(QCoreApplication.translate("DragGAN", u"0.5", None))
-        self.Drag_Label.setText(QCoreApplication.translate("DragGAN", u"Drag", None))
-        self.Radius_LineEdit.setText(QCoreApplication.translate("DragGAN", u"1", None))
-        self.Steps_Label.setText(QCoreApplication.translate("DragGAN", u"Steps:", None))
-        self.Plus4Radius_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
-        self.Plus4Lambda_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
-        self.Start_PushButton.setText(QCoreApplication.translate("DragGAN", u"Start", None))
+        self.Latent_Label.setText(QCoreApplication.translate("DragGAN", u"Latent", None))
+        self.Plus4Seed_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
+        self.Pickle_Label.setText(QCoreApplication.translate("DragGAN", u"Pickle", None))
+        self.Seed_Label.setText(QCoreApplication.translate("DragGAN", u"Seed", None))
+        self.RandomSeed_CheckBox.setText(QCoreApplication.translate("DragGAN", u"Random Seed", None))
         self.AddPoint_PushButton.setText(QCoreApplication.translate("DragGAN", u"Add point", None))
-        self.Drag_Label_4.setText(QCoreApplication.translate("DragGAN", u"Radius", None))
+        self.Drag_Label.setText(QCoreApplication.translate("DragGAN", u"Drag", None))
+        self.Stop_PushButton.setText(QCoreApplication.translate("DragGAN", u"Stop", None))
         self.Drag_Label_5.setText(QCoreApplication.translate("DragGAN", u"Lambda", None))
-        self.FlexibleArea_PushButton.setText(QCoreApplication.translate("DragGAN", u"Flexible area", None))
-        self.ResetMask_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset mask", None))
-        self.ShowMask_CheckBox.setText(QCoreApplication.translate("DragGAN", u"Show mask", None))
+        self.ResetPoint_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset point", None))
+        self.Minus4Lambda_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
+        self.Steps_Label.setText(QCoreApplication.translate("DragGAN", u"Steps:", None))
+        self.Start_PushButton.setText(QCoreApplication.translate("DragGAN", u"Start", None))
         self.FixedArea_PushButton.setText(QCoreApplication.translate("DragGAN", u"Fixed area", None))
+        self.StepNumber_Label.setText(QCoreApplication.translate("DragGAN", u"0", None))
+        self.StepSize_Label.setText(QCoreApplication.translate("DragGAN", u"Step Size", None))
+        self.Mask_Label.setText(QCoreApplication.translate("DragGAN", u"Mask", None))
+        self.ShowMask_CheckBox.setText(QCoreApplication.translate("DragGAN", u"Show mask", None))
+        self.Drag_Label_4.setText(QCoreApplication.translate("DragGAN", u"Radius", None))
+        self.Reset4R1_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset", None))
+        self.R1_Label.setText(QCoreApplication.translate("DragGAN", u"R1", None))
+        self.Plus4Lambda_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
+        self.Reset4StepSize_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset", None))
+        self.Lambda_LineEdit.setText(QCoreApplication.translate("DragGAN", u"0.5", None))
+        self.ResetMask_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset mask", None))
+        self.Radius_LineEdit.setText(QCoreApplication.translate("DragGAN", u"1", None))
+        self.FlexibleArea_PushButton.setText(QCoreApplication.translate("DragGAN", u"Flexible area", None))
+        self.Plus4Radius_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
+        self.Minus4Radius_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
+        self.Reset4R2_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset", None))
+        self.R2_Label.setText(QCoreApplication.translate("DragGAN", u"R2", None))
     # retranslateUi
 
