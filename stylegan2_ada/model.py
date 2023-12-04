@@ -34,7 +34,8 @@ class StyleGAN(object):
                 module.register_forward_hook(hook)
 
     # 根据seed生成w向量
-    def gen_w(self, seed):
+    def gen_w(self, seed, w_plus=True):
+        # 随机Latent
         z = torch.from_numpy(np.random.RandomState(seed).randn(1, self.G.z_dim)).to(torch.float32).to(self.device)
         W = self.G.mapping(
             z,
@@ -42,12 +43,21 @@ class StyleGAN(object):
             truncation_psi=self.trunc,
             truncation_cutoff=None,
         )
-        return W
+        self.w0 = W
+        if w_plus:
+            return W
+        else:
+            return W[:, 0, :]
     
     # 根据w向量生成图像
     def gen_img(self, w):
         if not isinstance(w, torch.Tensor):
             w = torch.from_numpy(w).to(self.device)
+        if w.dim() == 2:
+            w = w.unsqueeze(1).repeat(1,6,1)
+        w = torch.cat([w[:,:6,:], self.w0[:,6:,:]], dim=1)
+        if w.dim() == 2:
+                w = w.unsqueeze(1).repeat([1, self.G.num_ws, 1])
         img = self.G.synthesis(w, noise_mode="const", force_fp32=True)
         return img, self.G.activations[0]
     

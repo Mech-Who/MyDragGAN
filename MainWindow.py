@@ -52,11 +52,15 @@ class MainWindow(ConfigMainWindow):
         self.seed = 0
         self.ui.Seed_LineEdit.setText(str(self.seed))
         self.min_seed = 0
-        self.max_seed = 20000
+        self.max_seed = 65535
 
         # 设置默认步长
-        self.step_size = 0.5
+        self.step_size = 2e-3
         self.ui.StepSize_LineEdit.setText(str(self.step_size))
+
+        self.w_plus = True
+        self.ui.Wp_CheckBox.setChecked(self.w_plus)
+        self.ui.W_CheckBox.setChecked(not self.w_plus)
 
         #### drag部分初始化 ####
         # 设置Radius默认值与阈值
@@ -93,13 +97,13 @@ class MainWindow(ConfigMainWindow):
         self.pickle_path = pickle_path
         self.model.load_ckpt(pickle_path)
 
-    def generateImage(self, seed):
+    def generateImage(self, seed, w_plus=True):
         if self.pickle_path:
             # 将opt设置为None, 表示开始一次新的优化
             self.optimizer = None
 
             # seed -> w -> image(torch.Tensor)
-            self.W = self.model.gen_w(seed)
+            self.W = self.model.gen_w(seed, w_plus)
             img, self.init_F = self.model.gen_img(self.W)
 
             img = img[0]
@@ -184,11 +188,11 @@ class MainWindow(ConfigMainWindow):
             # 监督移动前后的特征要一致
             loss += torch_F.l1_loss(F_qi.detach(), F_qi_plus_di)
             # 同时监督特征图上, mask外的特征要一致 TODO
-            if mask is not None:
-                if mask.min()==0 and mask.max()==1:
-                    mask_array = mask.bool().to(self.device).unsqueeze(0).unsqueeze(0)
-                    loss_add = torch_F.l1_loss(self.init_F*mask_array, self.F0_resized*mask_array)
-                    loss += loss_add * self.lambda_
+            # if mask_mask is not None:
+            #     if mask_mask.min()==0 and mask_mask.max()==1:
+            #         mask_mask_array = mask_mask.bool().to(self.device).unsqueeze(0).unsqueeze(0)
+            #         loss_add = torch_F.l1_loss(self.init_F*mask_mask_array, self.F0_resized*mask_mask_array)
+            #         loss += loss_add * self.lambda_
         
         return loss
 
@@ -282,12 +286,12 @@ class MainWindow(ConfigMainWindow):
         tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
         init_pts = np.vstack(init_pts)[:, ::-1].copy()
         tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
-        self.prepare2Drag(init_pts)
+        self.prepare2Drag(init_pts, lr=self.step_size)
         
         self.steps = 0
         while(self.isDragging):
             # 迭代一次
-            status, ret = self.drag(init_pts, tar_pts)
+            status, ret = self.drag(init_pts, tar_pts, allow_error_px=5, r1=3, r2=13)
             if status:
                 init_pts, _, image = ret
             else:
@@ -355,13 +359,29 @@ class MainWindow(ConfigMainWindow):
         self.ui.StepSize_LineEdit.setText(str(self.step_size))
 
     @Slot()
+    def on_W_CheckBox_stateChanged(self):
+        if self.ui.W_CheckBox.isChecked():
+            self.w_plus = False
+        else:
+            self.w_plus = True
+        print(f"w current w_plus: {self.w_plus}")
+
+    @Slot()
+    def on_Wp_CheckBox_stateChanged(self):
+        if self.ui.Wp_CheckBox.isChecked():
+            self.w_plus = True
+        else:
+            self.w_plus = False
+        print(f"wp current w_plus: {self.w_plus}")
+
+    @Slot()
     def on_Generate_PushButton_clicked(self):
         print("start generate")
         self.model.load_ckpt(self.pickle_path)
         # file = os.path.realpath("./components/dog.jpg")
         # print(file)
         # self.ui.Image_Widget.set_image(file)
-        image = self.generateImage(self.seed) # 3 * 512 * 512
+        image = self.generateImage(self.seed, self.w_plus) # 3 * 512 * 512
         if image is not None:
             # self.update_image(image)
             self.ui.Image_Widget.set_image_from_array(image)
