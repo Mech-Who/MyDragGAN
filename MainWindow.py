@@ -3,6 +3,7 @@ import sys
 import random
 import json
 import threading
+from pprint import pprint
 
 from PySide6.QtCore import Signal, Slot, QPoint
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QMessageBox, QFileDialog
