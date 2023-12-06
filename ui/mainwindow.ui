@@ -18,9 +18,6 @@
     <property name="spacing">
      <number>6</number>
     </property>
-    <item row="0" column="1" rowspan="3">
-     <widget class="ImageWidget" name="Image_Widget" native="true"/>
-    </item>
     <item row="0" column="0">
      <widget class="QWidget" name="model" native="true">
       <property name="sizePolicy">
@@ -190,10 +187,10 @@
     <item row="1" column="0">
      <widget class="QWidget" name="drag" native="true">
       <layout class="QGridLayout" name="gridLayout_3" columnstretch="4,4,1,1,4">
-       <item row="0" column="1" colspan="3">
-        <widget class="QPushButton" name="AddPoint_PushButton">
+       <item row="4" column="4">
+        <widget class="QPushButton" name="Reset4StepSize_PushButton">
          <property name="text">
-          <string>Add point</string>
+          <string>Reset</string>
          </property>
         </widget>
        </item>
@@ -204,38 +201,20 @@
          </property>
         </widget>
        </item>
+       <item row="6" column="1" colspan="2">
+        <widget class="QLineEdit" name="R2_LineEdit"/>
+       </item>
+       <item row="8" column="3">
+        <widget class="QPushButton" name="SaveGenerate_PushButton">
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
        <item row="4" column="1" colspan="2">
         <widget class="QLineEdit" name="StepSize_LineEdit"/>
        </item>
-       <item row="1" column="4">
-        <widget class="QPushButton" name="Stop_PushButton">
-         <property name="text">
-          <string>Stop</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="4">
-        <widget class="QLabel" name="Drag_Label_5">
-         <property name="text">
-          <string>Lambda</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="4">
-        <widget class="QPushButton" name="ResetPoint_PushButton">
-         <property name="text">
-          <string>Reset point</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="2">
-        <widget class="QPushButton" name="Minus4Lambda_PushButton">
-         <property name="text">
-          <string>-</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="1">
+       <item row="8" column="1">
         <widget class="QLabel" name="Steps_Label">
          <property name="text">
           <string>Steps:</string>
@@ -252,10 +231,52 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="3">
-        <widget class="QPushButton" name="FixedArea_PushButton">
+       <item row="5" column="4">
+        <widget class="QPushButton" name="Reset4R1_PushButton">
          <property name="text">
-          <string>Fixed area</string>
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="3">
+        <widget class="QPushButton" name="AddPoint_PushButton">
+         <property name="text">
+          <string>Add point</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="2">
+        <widget class="QLabel" name="StepNumber_Label">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QPushButton" name="ResetPoint_PushButton">
+         <property name="text">
+          <string>Reset point</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="3">
+        <widget class="QLabel" name="R1_Label">
+         <property name="text">
+          <string>R1</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="3">
+        <widget class="QLabel" name="R2_Label">
+         <property name="text">
+          <string>R2</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="4">
+        <widget class="QPushButton" name="Reset4R2_PushButton">
+         <property name="text">
+          <string>Reset</string>
          </property>
         </widget>
        </item>
@@ -266,14 +287,130 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
+       <item row="1" column="4">
+        <widget class="QPushButton" name="Stop_PushButton">
+         <property name="text">
+          <string>Stop</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="2">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QWidget" name="mask" native="true">
+      <layout class="QGridLayout" name="gridLayout_4" columnstretch="0,0,0,0,0">
+       <item row="1" column="3" colspan="2">
+        <widget class="QCheckBox" name="ShowMask_CheckBox">
+         <property name="text">
+          <string>Show mask</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
         <widget class="QLabel" name="Mask_Label">
          <property name="text">
           <string>Mask</string>
          </property>
         </widget>
        </item>
-       <item row="12" column="2">
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="Radius_LineEdit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QPushButton" name="Minus4Radius_PushButton">
+         <property name="text">
+          <string>-</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QPushButton" name="FlexibleArea_PushButton">
+         <property name="text">
+          <string>Flexible area</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="Lambda_LineEdit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>0.5</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="4">
+        <widget class="QLabel" name="Drag_Label_5">
+         <property name="text">
+          <string>Lambda</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QPushButton" name="Plus4Radius_PushButton">
+         <property name="text">
+          <string>+</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="QLabel" name="Drag_Label_4">
+         <property name="text">
+          <string>Radius</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QPushButton" name="Minus4Lambda_PushButton">
+         <property name="text">
+          <string>-</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" colspan="2">
+        <widget class="QPushButton" name="ResetMask_PushButton">
+         <property name="text">
+          <string>Reset mask</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="3">
+        <widget class="QPushButton" name="Plus4Lambda_PushButton">
+         <property name="text">
+          <string>+</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" colspan="2">
+        <widget class="QPushButton" name="FixedArea_PushButton">
+         <property name="text">
+          <string>Fixed area</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="2">
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -286,129 +423,11 @@
          </property>
         </spacer>
        </item>
-       <item row="9" column="3">
-        <widget class="QCheckBox" name="ShowMask_CheckBox">
-         <property name="text">
-          <string>Show mask</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="4">
-        <widget class="QLabel" name="Drag_Label_4">
-         <property name="text">
-          <string>Radius</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="4">
-        <widget class="QPushButton" name="Reset4R1_PushButton">
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="3">
-        <widget class="QLabel" name="R1_Label">
-         <property name="text">
-          <string>R1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="3">
-        <widget class="QPushButton" name="Plus4Lambda_PushButton">
-         <property name="text">
-          <string>+</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="4">
-        <widget class="QPushButton" name="Reset4StepSize_PushButton">
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="1">
-        <widget class="QLineEdit" name="Lambda_LineEdit">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>0.5</string>
-         </property>
-        </widget>
-       </item>
-       <item row="9" column="1" colspan="2">
-        <widget class="QPushButton" name="ResetMask_PushButton">
-         <property name="text">
-          <string>Reset mask</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="1">
-        <widget class="QLineEdit" name="Radius_LineEdit">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1" colspan="2">
-        <widget class="QPushButton" name="FlexibleArea_PushButton">
-         <property name="text">
-          <string>Flexible area</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="3">
-        <widget class="QPushButton" name="Plus4Radius_PushButton">
-         <property name="text">
-          <string>+</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="2">
-        <widget class="QPushButton" name="Minus4Radius_PushButton">
-         <property name="text">
-          <string>-</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="4">
-        <widget class="QPushButton" name="Reset4R2_PushButton">
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="3">
-        <widget class="QLabel" name="R2_Label">
-         <property name="text">
-          <string>R2</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1" colspan="2">
-        <widget class="QLineEdit" name="R2_LineEdit"/>
-       </item>
-       <item row="7" column="2">
-        <widget class="QLabel" name="StepNumber_Label">
-         <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="3">
-        <widget class="QPushButton" name="SaveGenerate_PushButton">
-         <property name="text">
-          <string>Save</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
+    </item>
+    <item row="0" column="1" rowspan="3">
+     <widget class="ImageWidget" name="Image_Widget" native="true"/>
     </item>
    </layout>
   </widget>
@@ -418,7 +437,7 @@
      <x>0</x>
      <y>0</y>
      <width>971</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

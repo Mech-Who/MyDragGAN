@@ -415,7 +415,7 @@ class MainWindow(ConfigMainWindow):
         image_format = "png"
         filename = f"{pickle}_{self.seed}.{image_format}"
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        image_dir = os.path.join(base_dir, "save_images", "real_images")
+        image_dir = os.path.join(base_dir, "save_images", "generated_images")
         filename = os.path.join(image_dir, filename)
         self.save_image(filename, image_format, 100)
         print(f"save image to {filename}")
@@ -483,7 +483,7 @@ class MainWindow(ConfigMainWindow):
         image_format = "png"
         filename = f"{pickle}_{self.seed}.{image_format}"
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        image_dir = os.path.join(base_dir, "save_images", "generated_images")
+        image_dir = os.path.join(base_dir, "save_images", "edited_images")
         filename = os.path.join(image_dir, filename)
         self.save_image(filename, image_format, 100)
         print(f"save image to {filename}")

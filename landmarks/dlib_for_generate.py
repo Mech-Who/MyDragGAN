@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # 参数设置
 
     shape_predictor = "./landmarks/shape_predictor_68_face_landmarks.dat"
-    image_file = "./save_images/generated_images/stylegan2-ffhq-512x512_0.png"
+    image_file = "./save_images/generated_images/stylegan2-ffhq-512x512_6197.png"
 
     ###################################################################################################################
     # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
