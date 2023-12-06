@@ -28,16 +28,6 @@ if __name__ == '__main__':
     ap.add_argument("-i", "--image", required=True, help="path to input image")
     args = vars(ap.parse_args())
 
-    # （2）68个关键点与5个关键点（嘴 + 右眉毛 + 左眉毛 + 右眼 + 左眼 + 鼻子 + 下巴）
-    # from collections import OrderedDict 由于字典是无序的，故导入模块使得字典有序。因为需要按指定顺序提取，以识别当前数据。
-    FACIAL_LANDMARKS_68_IDXS = OrderedDict([("mouth", (48, 68)),
-                                            ("right_eyebrow", (17, 22)),
-                                            ("left_eyebrow", (22, 27)),
-                                            ("right_eye", (36, 42)),
-                                            ("left_eye", (42, 48)),
-                                            ("nose", (27, 36)),
-                                            ("jaw", (0, 17))])
-    FACIAL_LANDMARKS_5_IDXS = OrderedDict([("right_eye", (2, 3)), ("left_eye", (0, 1)), ("nose", 4)])
     ###################################################################################################################
     # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
     detector = dlib.get_frontal_face_detector()							# 1.1、基于dlib的人脸检测器
