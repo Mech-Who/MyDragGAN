@@ -136,9 +136,12 @@ class MainWindow(ConfigMainWindow):
     def update_image(self, new_image):
         self.ui.Image_Widget.set_image_from_array(new_image)
 
-    def save_image(self, image_dir=os.path.join(os.path.abspath(__file__), "generated_images"),
-                    filename =  f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png", image_format="png", quality=100):
-        self.ui.Image_Widget.save_image(image_dir+filename, image_format, quality)
+    def save_image(self, filename =  f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png",
+                    image_format="png", quality=100):
+        directory = os.path.dirname(filename)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        self.ui.Image_Widget.save_image(filename, image_format, quality)
 
     def prepare2Drag(self, init_pts, lr=2e-3):
         # 1. 备份初始图像的特征图 -> motion supervision和point tracking都需要用到
@@ -411,13 +414,14 @@ class MainWindow(ConfigMainWindow):
 
     @Slot()
     def on_SaveReal_PushButton_clicked(self):
-        print("save images")
-        pickle = os.path.basename(self.pickle_path)
-        date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
         image_format = "png"
-        filename = f"{pickle}_{date}.{image_format}"
-        image_dir = os.path.join(os.path.abspath(__file__), "save_images", "real_images")
-        self.save_image(image_dir+filename, image_format, 100)
+        filename = f"{pickle}_{self.seed}.{image_format}"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_dir = os.path.join(base_dir, "save_images", "real_images")
+        filename = os.path.join(image_dir, filename)
+        self.save_image(filename, image_format, 100)
+        print(f"save image to {filename}")
 
 ################## drag ##################
 
@@ -478,13 +482,14 @@ class MainWindow(ConfigMainWindow):
 
     @Slot()
     def on_SaveGenerate_PushButton_clicked(self):
-        print("save images")
-        pickle = os.path.basename(self.pickle_path)
-        date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
         image_format = "png"
-        filename = f"{pickle}_{date}.{image_format}"
-        image_dir = os.path.join(os.path.abspath(__file__), "save_images", "generated_images")
-        self.save_image(image_dir+filename, image_format, 100)
+        filename = f"{pickle}_{self.seed}.{image_format}"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_dir = os.path.join(base_dir, "save_images", "generated_images")
+        filename = os.path.join(image_dir, filename)
+        self.save_image(filename, image_format, 100)
+        print(f"save image to {filename}")
 
     @Slot()
     def on_FlexibleArea_PushButton_clicked(self):

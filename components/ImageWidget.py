@@ -11,7 +11,6 @@ class ImageWidget(QWidget):
     """
     图片自适应 QWidget (通过QLabel显式)
     """
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -20,12 +19,13 @@ class ImageWidget(QWidget):
         self.image_label.installEventFilter(self)
         self.image_rate = None
         self.last_pos = None
+        self.pixmap = QPixmap()
 
         self.painter = QPainter()
 
     def set_image(self, file_name):
         try:
-            self.pixmap = QPixmap(file_name)
+            self.pixmap = QPixmap().fromImage(QImage(file_name))
             pix_map = self.pixmap
             self.image_rate = pix_map.width() / pix_map.height()
             self.image_label.setPixmap(pix_map)
@@ -52,7 +52,8 @@ class ImageWidget(QWidget):
         img = image.cpu().numpy()
         img = Image.fromarray(img)
         # pix_map = QPixmap.fromImage(qimage)
-        pix_map = img.toqpixmap()
+        self.pixmap = img.toqpixmap()
+        pix_map = self.pixmap
         self.image_rate = pix_map.width() / pix_map.height()
         self.image_label.setPixmap(pix_map)
         self.compute_size()
@@ -96,7 +97,14 @@ class ImageWidget(QWidget):
         8. XBM格式：使用"xbm"文件扩展名
         9. XPM格式：使用"xpm"文件扩展名
         """
-        self.pixmap.save(filename, format, quality)
+        short_name = os.path.basename(filename)
+        if self.pixmap:
+            if self.pixmap.save(filename, format, quality):
+                QMessageBox.information(self, "Save Image", f"Image saved as {short_name} successfully!")
+            else:
+                QMessageBox.critical(self, "Error", f"Save image as {short_name} failed!")
+        else:
+            QMessageBox.critical(self, "Error", "No image loaded!")
 
     def set_status(self, new_status):
         self.image_label.set_status(new_status)
