@@ -4,6 +4,7 @@
 .idea
 __pycache__
 checkpoints
+save_images
 
 # type
 
