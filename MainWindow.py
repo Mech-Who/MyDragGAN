@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 import random
@@ -134,6 +135,10 @@ class MainWindow(ConfigMainWindow):
 
     def update_image(self, new_image):
         self.ui.Image_Widget.set_image_from_array(new_image)
+
+    def save_image(self, image_dir=os.path.join(os.path.abspath(__file__), "generated_images"),
+                    filename =  f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png", image_format="png", quality=100):
+        self.ui.Image_Widget.save_image(image_dir+filename, image_format, quality)
 
     def prepare2Drag(self, init_pts, lr=2e-3):
         # 1. 备份初始图像的特征图 -> motion supervision和point tracking都需要用到
@@ -404,6 +409,16 @@ class MainWindow(ConfigMainWindow):
             self.ui.Image_Widget.set_image_from_array(image)
         # self.model = StyleGAN(self.pickle_path, self.device, self.seed)
 
+    @Slot()
+    def on_SaveReal_PushButton_clicked(self):
+        print("save images")
+        pickle = os.path.basename(self.pickle_path)
+        date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        image_format = "png"
+        filename = f"{pickle}_{date}.{image_format}"
+        image_dir = os.path.join(os.path.abspath(__file__), "save_images", "real_images")
+        self.save_image(image_dir+filename, image_format, 100)
+
 ################## drag ##################
 
     @Slot()
@@ -460,6 +475,16 @@ class MainWindow(ConfigMainWindow):
     def on_Reset4R2_PushButton_clicked(self):
         self.r2 = self.DEFAULT_R2
         self.ui.R2_LineEdit.setText(str(self.r2))
+
+    @Slot()
+    def on_SaveGenerate_PushButton_clicked(self):
+        print("save images")
+        pickle = os.path.basename(self.pickle_path)
+        date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        image_format = "png"
+        filename = f"{pickle}_{date}.{image_format}"
+        image_dir = os.path.join(os.path.abspath(__file__), "save_images", "generated_images")
+        self.save_image(image_dir+filename, image_format, 100)
 
     @Slot()
     def on_FlexibleArea_PushButton_clicked(self):

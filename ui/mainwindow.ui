@@ -177,6 +177,13 @@
          </property>
         </widget>
        </item>
+       <item row="6" column="2">
+        <widget class="QPushButton" name="SaveReal_PushButton">
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -249,13 +256,6 @@
         <widget class="QPushButton" name="FixedArea_PushButton">
          <property name="text">
           <string>Fixed area</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="2" colspan="3">
-        <widget class="QLabel" name="StepNumber_Label">
-         <property name="text">
-          <string>0</string>
          </property>
         </widget>
        </item>
@@ -393,6 +393,20 @@
        <item row="6" column="1" colspan="2">
         <widget class="QLineEdit" name="R2_LineEdit"/>
        </item>
+       <item row="7" column="2">
+        <widget class="QLabel" name="StepNumber_Label">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="3">
+        <widget class="QPushButton" name="SaveGenerate_PushButton">
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -404,7 +418,7 @@
      <x>0</x>
      <y>0</y>
      <width>971</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>

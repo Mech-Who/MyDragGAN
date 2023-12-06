@@ -25,7 +25,8 @@ class ImageWidget(QWidget):
 
     def set_image(self, file_name):
         try:
-            pix_map = QPixmap(file_name)
+            self.pixmap = QPixmap(file_name)
+            pix_map = self.pixmap
             self.image_rate = pix_map.width() / pix_map.height()
             self.image_label.setPixmap(pix_map)
             self.compute_size()
@@ -80,6 +81,22 @@ class ImageWidget(QWidget):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.compute_size()
+
+    def save_image(self, filename, format, quality):
+        """
+        pixmap.save()方法是用于将QPixmap对象保存为文件的方法，它可以写入多种不同的文件格式，具体支持的格式取决于Qt库和操作系统的支持情况。
+        在大多数情况下，Qt库支持的格式包括：
+        1. BMP格式：使用"bmp"或"wbmp"文件扩展名
+        2. GIF格式：使用"gif"文件扩展名
+        3. JPEG格式：使用"jpg"、"jpeg"或"jpe"文件扩展名
+        4. PNG格式：使用"png"文件扩展名
+        5. PBM格式：使用"pbm"文件扩展名
+        6. PGM格式：使用"pgm"文件扩展名
+        7. PPM格式：使用"ppm"文件扩展名
+        8. XBM格式：使用"xbm"文件扩展名
+        9. XPM格式：使用"xpm"文件扩展名
+        """
+        self.pixmap.save(filename, format, quality)
 
     def set_status(self, new_status):
         self.image_label.set_status(new_status)

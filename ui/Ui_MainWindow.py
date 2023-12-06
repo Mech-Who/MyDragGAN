@@ -137,6 +137,11 @@ class Ui_DragGAN(object):
 
         self.gridLayout_2.addWidget(self.RandomSeed_CheckBox, 4, 1, 1, 1)
 
+        self.SaveReal_PushButton = QPushButton(self.model)
+        self.SaveReal_PushButton.setObjectName(u"SaveReal_PushButton")
+
+        self.gridLayout_2.addWidget(self.SaveReal_PushButton, 6, 2, 1, 1)
+
         self.gridLayout_2.setRowStretch(0, 1)
         self.gridLayout_2.setColumnStretch(0, 2)
 
@@ -200,11 +205,6 @@ class Ui_DragGAN(object):
         self.FixedArea_PushButton.setObjectName(u"FixedArea_PushButton")
 
         self.gridLayout_3.addWidget(self.FixedArea_PushButton, 8, 3, 1, 1)
-
-        self.StepNumber_Label = QLabel(self.drag)
-        self.StepNumber_Label.setObjectName(u"StepNumber_Label")
-
-        self.gridLayout_3.addWidget(self.StepNumber_Label, 7, 2, 1, 3)
 
         self.StepSize_Label = QLabel(self.drag)
         self.StepSize_Label.setObjectName(u"StepSize_Label")
@@ -297,6 +297,16 @@ class Ui_DragGAN(object):
 
         self.gridLayout_3.addWidget(self.R2_LineEdit, 6, 1, 1, 2)
 
+        self.StepNumber_Label = QLabel(self.drag)
+        self.StepNumber_Label.setObjectName(u"StepNumber_Label")
+
+        self.gridLayout_3.addWidget(self.StepNumber_Label, 7, 2, 1, 1)
+
+        self.SaveGenerate_PushButton = QPushButton(self.drag)
+        self.SaveGenerate_PushButton.setObjectName(u"SaveGenerate_PushButton")
+
+        self.gridLayout_3.addWidget(self.SaveGenerate_PushButton, 7, 3, 1, 1)
+
         self.gridLayout_3.setColumnStretch(0, 4)
         self.gridLayout_3.setColumnStretch(1, 4)
         self.gridLayout_3.setColumnStretch(2, 1)
@@ -312,7 +322,7 @@ class Ui_DragGAN(object):
         DragGAN.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(DragGAN)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 971, 21))
+        self.menubar.setGeometry(QRect(0, 0, 971, 22))
         DragGAN.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(DragGAN)
         self.statusbar.setObjectName(u"statusbar")
@@ -338,6 +348,7 @@ class Ui_DragGAN(object):
         self.Pickle_Label.setText(QCoreApplication.translate("DragGAN", u"Pickle", None))
         self.Seed_Label.setText(QCoreApplication.translate("DragGAN", u"Seed", None))
         self.RandomSeed_CheckBox.setText(QCoreApplication.translate("DragGAN", u"Random Seed", None))
+        self.SaveReal_PushButton.setText(QCoreApplication.translate("DragGAN", u"Save", None))
         self.AddPoint_PushButton.setText(QCoreApplication.translate("DragGAN", u"Add point", None))
         self.Drag_Label.setText(QCoreApplication.translate("DragGAN", u"Drag", None))
         self.Stop_PushButton.setText(QCoreApplication.translate("DragGAN", u"Stop", None))
@@ -347,7 +358,6 @@ class Ui_DragGAN(object):
         self.Steps_Label.setText(QCoreApplication.translate("DragGAN", u"Steps:", None))
         self.Start_PushButton.setText(QCoreApplication.translate("DragGAN", u"Start", None))
         self.FixedArea_PushButton.setText(QCoreApplication.translate("DragGAN", u"Fixed area", None))
-        self.StepNumber_Label.setText(QCoreApplication.translate("DragGAN", u"0", None))
         self.StepSize_Label.setText(QCoreApplication.translate("DragGAN", u"Step Size", None))
         self.Mask_Label.setText(QCoreApplication.translate("DragGAN", u"Mask", None))
         self.ShowMask_CheckBox.setText(QCoreApplication.translate("DragGAN", u"Show mask", None))
@@ -364,5 +374,7 @@ class Ui_DragGAN(object):
         self.Minus4Radius_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
         self.Reset4R2_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset", None))
         self.R2_Label.setText(QCoreApplication.translate("DragGAN", u"R2", None))
+        self.StepNumber_Label.setText(QCoreApplication.translate("DragGAN", u"0", None))
+        self.SaveGenerate_PushButton.setText(QCoreApplication.translate("DragGAN", u"Save", None))
     # retranslateUi
 
