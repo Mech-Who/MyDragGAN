@@ -3,7 +3,6 @@ import argparse
 import dlib
 import cv2
 
-# https://blog.csdn.net/shinuone/article/details/130958271
 #https://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
 #http://dlib.net/files/
 
@@ -20,34 +19,34 @@ def shape_to_np(shape, dtype="int"):
 
 if __name__ == '__main__':
     ###################################################################################################################
-    # （1）参数配置
-    ap = argparse.ArgumentParser()
-    # 		【参数1】面部地标预测器路径: shape_predictor_68_face_landmarks.dat
-    ap.add_argument("-p", "--shape-predictor", required=True, help="path to facial landmark predictor")
-    # 		【参数2】待检测图像的存放路径
-    ap.add_argument("-i", "--image", required=True, help="path to input image")
-    args = vars(ap.parse_args())
+    # 参数设置
+
+    shape_predictor = "./landmarks/shape_predictor_68_face_landmarks.dat"
+    image_file = "./save_images/generated_images/stylegan2-ffhq-512x512_0.png"
 
     ###################################################################################################################
     # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
-    detector = dlib.get_frontal_face_detector()							# 1.1、基于dlib的人脸检测器
-    predictor = dlib.shape_predictor(args["shape_predictor"])			# 1.2、基于dlib的关键点定位（68个关键点）
+    detector = dlib.get_frontal_face_detector()			# 1.1、基于dlib的人脸检测器
+    predictor = dlib.shape_predictor(shape_predictor)	# 1.2、基于dlib的关键点定位（68个关键点）
 
     # （2）图像预处理
-    image = cv2.imread(args["image"])									# 2.1、读取图像
+    # 2.1、读取图像
+    image = cv2.imread(image_file)
     (h, w) = image.shape[:2]		# 获取图像的宽和高
     width = 500						# 指定宽度
     r = width / float(w)			# 计算比例
     dim = (width, int(h * r))		# 按比例缩放高度: (宽, 高)
-    image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)		# 2.2、图像缩放
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)						# 2.3、灰度图
+    # 2.2、图像缩放
+    image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+    # 2.3、灰度图
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     # （3）人脸检测
     rects = detector(gray, 1)				# 若有多个目标，则返回多个人脸框
 
     # （4）遍历检测得到的【人脸框 + 关键点】
     # rect: 人脸框
-    for (i, rect) in enumerate(rects):		
+    for rect in rects:		
         # 4.1、定位脸部的关键点（返回的是一个结构体信息，需要遍历提取坐标）
         shape = predictor(gray, rect)
         # 4.2、遍历shape提取坐标并进行格式转换: ndarray

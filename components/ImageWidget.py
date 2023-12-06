@@ -35,31 +35,13 @@ class ImageWidget(QWidget):
             print(e)
 
     def set_image_from_array(self, image):
-        # try:
-            # q_image = QImage(   image.data, 
-            #                             image.shape[1], 
-            #                             image.shape[0], 
-            #                             image.shape[1]*3, 
-            #                             QImage.Format_RGB888
-            #                             )
-        # pprint(image)
-        # pprint(len(image))
-
-        # height, width, channel = image.shape
-        # bytes_per_line = 3 * width
-
-        # qimage = QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
         img = image.cpu().numpy()
         img = Image.fromarray(img)
-        # pix_map = QPixmap.fromImage(qimage)
         self.pixmap = img.toqpixmap()
         pix_map = self.pixmap
         self.image_rate = pix_map.width() / pix_map.height()
         self.image_label.setPixmap(pix_map)
         self.compute_size()
-        # except Exception as e:
-        #     QMessageBox.critical(self, "Error", "Load image failed!")
-        #     print(e)
 
     def compute_size(self):
         if self.image_rate is not None:

@@ -126,8 +126,6 @@ class MainWindow(ConfigMainWindow):
             img = img * (10 ** (img_scale_db / 20))
             img = (img * 127.5 + 128).clamp(0, 255).to(torch.uint8).permute(1, 2, 0)
 
-            print(f"image data: {img}")
-
             return img
         else:
             return None
@@ -376,8 +374,6 @@ class MainWindow(ConfigMainWindow):
             self.random_seed = True
             self.ui.Plus4Seed_PushButton.setDisabled(True)
             self.ui.Minus4Seed_PushButton.setDisabled(True)
-            self.seed = random.randint(self.min_seed, self.max_seed)
-            self.ui.Seed_LineEdit.setText(str(self.seed))
         else:
             self.random_seed = False
             self.ui.Plus4Seed_PushButton.setEnabled(True)
@@ -403,9 +399,10 @@ class MainWindow(ConfigMainWindow):
     def on_Generate_PushButton_clicked(self):
         print("start generate")
         self.model.load_ckpt(self.pickle_path)
-        # file = os.path.realpath("./components/dog.jpg")
-        # print(file)
-        # self.ui.Image_Widget.set_image(file)
+
+        if self.random_seed:
+            self.seed = random.randint(self.min_seed, self.max_seed)
+            self.ui.Seed_LineEdit.setText(str(self.seed))
         image = self.generateImage(self.seed, self.w_plus) # 3 * 512 * 512
         if image is not None:
             # self.update_image(image)
