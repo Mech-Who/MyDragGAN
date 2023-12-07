@@ -5,6 +5,7 @@ import random
 import json
 import threading
 from pprint import pprint
+import time
 
 from PySide6.QtCore import Signal, Slot, QPoint
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QMessageBox, QFileDialog
@@ -109,6 +110,12 @@ class MainWindow(ConfigMainWindow):
         self.sixth_block = True
         self.seventh_block = False
 
+        self.test_times = 1
+        self.ui.TestTimes_LineEdit.setText(str(self.test_times))
+
+        self.drag_times = 200
+        self.ui.DragTimes_LineEdit.setText(str(self.drag_times))
+
         #### 初始化ImageLabel ####
         # 设置ImageLabel的自适应大小比率
         self.image_rate = None
@@ -150,11 +157,13 @@ class MainWindow(ConfigMainWindow):
         self.ui.Image_Widget.set_image_from_array(new_image)
 
     def save_image(self, filename =  f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.png",
-                    image_format="png", quality=100):
+                    image_format="png", quality=100, is_experience=False):
+        if os.path.exists(filename):
+            return
         directory = os.path.dirname(filename)
         if not os.path.exists(directory):
             os.makedirs(directory)
-        self.ui.Image_Widget.save_image(filename, image_format, quality)
+        self.ui.Image_Widget.save_image(filename, image_format, quality, is_experience=is_experience)
 
     def prepare2Drag(self, init_pts, lr=2e-3):
         # 1. 备份初始图像的特征图 -> motion supervision和point tracking都需要用到
@@ -320,7 +329,8 @@ class MainWindow(ConfigMainWindow):
         if self.showPoints:
             print(f"tar pts: {tar_pts.cpu().numpy()}, new init pts: {new_init_pts.cpu().numpy()}")
         print(f"tar pts length: {len(tar_pts.cpu().numpy())}, new init pts length: {len(new_init_pts.cpu().numpy())}")
-        print(f"Loss: {loss.item():0.4f} mean distance: {mean_distance(new_init_pts.cpu().numpy(), tar_pts.cpu().numpy()):.4f}\n")
+        md = mean_distance(new_init_pts.cpu().numpy(), tar_pts.cpu().numpy())
+        print(f"Loss: {loss.item():0.4f} mean distance: {md:.4f}\n")
         # print("update init_pts as Point Tracking")
 
         return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img)
@@ -356,6 +366,105 @@ class MainWindow(ConfigMainWindow):
 
             self.steps += 1
             self.ui.StepNumber_Label.setText(str(self.steps))
+
+    def drag_for(self, index):
+        points = self.ui.Image_Widget.get_points()
+        if len(points) < 2:
+            return
+        if len(points) % 2 == 1:
+            points = points[:-1]
+        init_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0])
+        tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
+        init_pts = np.vstack(init_pts)[:, ::-1].copy()
+        tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
+        self.prepare2Drag(init_pts, lr=self.step_size)
+        
+        self.steps = 0
+        result = {"loss": 0, "mean_distance": 0}
+        for i in range(self.drag_times):
+            print(f"current[{index+1}/{self.test_times}] drag times [{i+1}/{self.drag_times}]")
+            if not self.isDragging:
+                break
+            # 迭代一次
+            try:
+                status, ret = self.drag_experience(init_pts, tar_pts, allow_error_px=5, r1=3, r2=13)
+                if status:
+                    init_pts, _, image, result = ret
+                else:
+                    self.isDragging = False
+                    return
+            except Exception as e:
+                print(f"Error:{e}")
+                self.isDragging = False
+                return
+            # 显示最新的图像  
+            points = []
+            for i in range(init_pts.shape[0]):
+                points.append(QPoint(int(init_pts[i][1]), int(init_pts[i][0])))
+                points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
+            self.ui.Image_Widget.clear_points()
+            self.ui.Image_Widget.add_points(points)
+            self.update_image(image)
+
+            self.steps += 1
+            self.ui.StepNumber_Label.setText(str(self.steps))
+        print(f"current[{index+1}/{self.test_times}] {self.drag_times} times experience: loss: {result['loss']}, mean_distance: {result['mean_distance']}")
+        return result
+
+    def drag_experience(self, _init_pts, _tar_pts, allow_error_px=2, r1=3, r2=13):
+        init_pts = torch.from_numpy(_init_pts).float().to(self.device)
+        tar_pts = torch.from_numpy(_tar_pts).float().to(self.device)
+        # print(f"get init_pts: {_init_pts} and tar_pts: {_tar_pts}")
+
+        # 如果起始点和目标点之间的像素误差足够小，则停止
+        if torch.allclose(init_pts, tar_pts, atol=allow_error_px):
+            return False, (None, None)
+        self.optimizer.zero_grad()
+        # print("check if init_pts and tar_pts are close enough")
+
+        # 将latent的0:6设置成可训练,6:设置成不可训练 See Sec3.2
+        W_combined = torch.cat([self.W_layers_to_optimize, self.W_layers_to_fixed], dim=1)
+        # print("set 0:6 as trainable and 6: as fixed")
+        # 前向推理
+        new_img, _F = self.model.gen_img(W_combined)
+        # print("forward inference")
+        # See, Sec 3.2 in paper, 计算motion supervision loss
+        F_resized = torch_F.interpolate(_F, size=(512, 512), mode="bilinear", align_corners=True)
+        loss = self.motion_supervision(
+            F_resized,
+            init_pts, tar_pts,
+            r1=r1)
+
+        loss.backward()
+        self.optimizer.step()
+        # print("calculate Motion Supervision loss")
+
+        # 更新初始点 see Sec3.3 Point Tracking
+        with torch.no_grad():
+            # 以上过程会优化一次latent, 直接用新的latent生成图像，用于中间过程的显示
+            new_img, F_for_point_tracking = self.model.gen_img(W_combined)
+            
+            new_img = new_img[0]
+            img_scale_db = 0
+            new_img = new_img * (10 ** (img_scale_db / 20))
+            new_img = (new_img * 127.5 + 128).clamp(0, 255).to(torch.uint8).permute(1, 2, 0)
+
+            F_for_point_tracking_resized = torch_F.interpolate(F_for_point_tracking, size=(512, 512),
+                                                               mode="bilinear", align_corners=True).detach()
+            new_init_pts = self.point_tracking(F_for_point_tracking_resized, init_pts, r2=r2)
+        if self.showPoints:
+            print(f"tar pts: {tar_pts.cpu().numpy()}, new init pts: {new_init_pts.cpu().numpy()}")
+        print(f"tar pts length: {len(tar_pts.cpu().numpy())}, new init pts length: {len(new_init_pts.cpu().numpy())}")
+        md = mean_distance(new_init_pts.cpu().numpy(), tar_pts.cpu().numpy())
+        print(f"Loss: {loss.item():0.4f} mean distance: {md:.4f}\n")
+        # print("update init_pts as Point Tracking")
+        result = {
+            "loss": loss.item(),
+            "mean_distance": md,
+        }
+
+        return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img, result)
+        # return True, (np.array([0, 0]), np.array([1, 1]), np.array([0, 1]))
 
 ################### model ##################
 
@@ -606,12 +715,18 @@ class MainWindow(ConfigMainWindow):
             t_shape = utils.shape_to_np(t_shape)
             # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
             points = []
-            for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
+            if self.only_one_point:
+                o_x, o_y = o_shape[33]
+                t_x, t_y = t_shape[33]
                 points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
                 points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
-                if self.only_one_point:
-                    break
+            else:
+                for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
+                    points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                    points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+                
             self.ui.Image_Widget.add_points(points)
+
 
     @Slot()
     def on_SaveExperiment_PushButton_clicked(self):
@@ -629,6 +744,158 @@ class MainWindow(ConfigMainWindow):
         self.save_image(filename, image_format, 100)
         print(f"save image to {filename}")
 
+    @Slot()
+    def on_TestTimes_LineEdit_editingFinished(self):
+        test_times = int(self.ui.TestTimes_LineEdit.text())
+        if 0 < test_times:
+            self.test_times = test_times
+        print(self.test_times)
+
+    @Slot()
+    def on_DragTimes_LineEdit_editingFinished(self):
+        drag_times = int(self.ui.DragTimes_LineEdit.text())
+        if 0 < drag_times:
+            self.drag_times = drag_times
+        print(self.drag_times)
+
+    @Slot()
+    def on_Experience_PushButton_clicked(self):
+        print("experience")
+        threading.Thread(target=self.experience_thread, daemon=True).start()
+
+    def experience_thread(self):
+        import dlib
+
+        self.random_seed = True
+        self.ui.RandomSeed_CheckBox.setChecked(True)
+
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        image_format = "png"
+
+        sum_results = []
+        total_time = 0
+        for i in range(self.test_times):
+            # 生成目标图像
+            self.on_Generate_PushButton_clicked()
+            # 保存图片
+            
+            image_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save_images", "experience_target")
+            target_filename = os.path.join(image_dir, f"{pickle}_{self.seed}.{image_format}")
+            self.save_image(target_filename, image_format, 100, is_experience=True)
+            print(f"save target image as {target_filename}")
+
+            # 生成目标图像
+            self.on_Generate_PushButton_clicked()
+            # 保存图片
+            image_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save_images", "experience_origin")
+            origin_filename = os.path.join(image_dir, f"{pickle}_{self.seed}.{image_format}")
+            self.save_image(origin_filename, image_format, 100, is_experience=True)
+            print(f"save target image as {origin_filename}")
+            ###################################################################################################################
+            # 参数设置
+
+            dat_68 = "./landmarks/shape_predictor_68_face_landmarks.dat"
+            dat_5 = "./landmarks/shape_predictor_5_face_landmarks.dat"
+
+            shape_predictor = ""
+            if self.only_one_point:
+                shape_predictor = dat_68
+            if self.five_points:
+                shape_predictor = dat_5
+            if self.sixty_eight_points:
+                shape_predictor = dat_68
+            origin_file = origin_filename
+            target_file = target_filename
+
+            ###################################################################################################################
+            # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
+            detector = dlib.get_frontal_face_detector()			# 1.1、基于dlib的人脸检测器
+            predictor = dlib.shape_predictor(shape_predictor)	# 1.2、基于dlib的关键点定位（68个关键点）
+
+            # （2）图像预处理
+            # 2.1、读取图像
+            origin_image = cv2.imread(origin_file)
+            target_image = cv2.imread(target_file)
+
+            q_size = self.ui.Image_Widget.image_label.size()
+            # image_rate = self.ui.Image_Widget.image_rate
+
+            width = q_size.width() 		        # 指定宽度
+
+            (o_h, o_w) = origin_image.shape[:2]	# 获取图像的宽和高
+            o_r = width / float(o_w)			# 计算比例
+            o_dim = (width, int(o_h * o_r))		# 按比例缩放高度: (宽, 高)
+
+            (t_h, t_w) = target_image.shape[:2]	# 获取图像的宽和高
+            t_r = width / float(t_w)			# 计算比例
+            t_dim = (width, int(t_h * t_r))		# 按比例缩放高度: (宽, 高)
+
+            # self.ui.Image_Widget.set_image_scale(o_r)
+            # 2.2、图像缩放
+            origin_image = cv2.resize(origin_image, o_dim, interpolation=cv2.INTER_AREA)
+            target_image = cv2.resize(target_image, t_dim, interpolation=cv2.INTER_AREA)
+            # 2.3、灰度图
+            origin_gray = cv2.cvtColor(origin_image, cv2.COLOR_BGR2GRAY)
+            target_gray = cv2.cvtColor(target_image, cv2.COLOR_BGR2GRAY)
+
+            # （3）人脸检测
+            origin_rects = detector(origin_gray, 1)				# 若有多个目标，则返回多个人脸框
+            target_rects = detector(target_gray, 1)				# 若有多个目标，则返回多个人脸框
+
+            # （4）遍历检测得到的【人脸框 + 关键点】
+            # rect: 人脸框
+            for o_rect, t_rect in zip(origin_rects, target_rects):		
+                # 4.1、定位脸部的关键点（返回的是一个结构体信息，需要遍历提取坐标）
+                o_shape = predictor(origin_gray, o_rect)
+                t_shape = predictor(target_gray, t_rect)
+                # 4.2、遍历shape提取坐标并进行格式转换: ndarray
+                o_shape = utils.shape_to_np(o_shape)
+                t_shape = utils.shape_to_np(t_shape)
+                # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
+                points = []
+                if self.only_one_point:
+                    o_x, o_y = o_shape[30]
+                    t_x, t_y = t_shape[30]
+                    points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                    points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+                else:
+                    for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
+                        points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                        points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+                self.ui.Image_Widget.add_points(points)
+
+            if self.isDragging:
+                print("dragging is running!")
+                return
+            # TODO: 可能需要使用QT内置的多线程机制重新实现
+            self.isDragging = True
+            time_start = time.time()
+            result = self.drag_for(i)
+            time_end = time.time()
+            total_time += (time_end - time_start)/1000000 # s
+            self.isDragging = False
+            if result:
+                sum_results.append(result)
+
+            # 保存图片
+            image_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save_images", "experience_result")
+            result_filename = os.path.join(image_dir, f"{pickle}_{self.seed}.{image_format}")
+            self.save_image(result_filename, image_format, 100, is_experience=True)
+            print(f"save target image as {result_filename}")
+
+            # 清空画布
+            self.on_ResetPoint_PushButton_clicked()
+        avg_time = total_time/self.test_times
+        if len(sum_results) <= 0:
+            return
+        print(f"sum_results: {sum_results}")
+        avg_result = {
+            "loss": sum([r["loss"] for r in sum_results])/len(sum_results),
+            "mean_distance": sum([r["mean_distance"] for r in sum_results])/len(sum_results)
+        }
+        print(f"avg_result: loss: {avg_result['loss']}, mean_distance: {avg_result['mean_distance']}")
+        # QMessageBox.information(self, "Information", f"Experience is finished!\n avg_result: loss: {avg_result['loss']}, mean_distance: {avg_result['mean_distance']}", QMessageBox.Ok)
+        print(f"Experience is finished!\n avg_result: loss: {avg_result['loss']}, mean_distance: {avg_result['mean_distance']}, avg_time: {avg_time}")
 
     @Slot()
     def on_TargetImage_LineEdit_editingFinished(self):

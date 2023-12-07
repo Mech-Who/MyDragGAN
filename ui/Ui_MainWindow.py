@@ -26,7 +26,7 @@ class Ui_DragGAN(object):
     def setupUi(self, DragGAN):
         if not DragGAN.objectName():
             DragGAN.setObjectName(u"DragGAN")
-        DragGAN.resize(1076, 834)
+        DragGAN.resize(1126, 834)
         self.centralwidget = QWidget(DragGAN)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout = QGridLayout(self.centralwidget)
@@ -36,6 +36,51 @@ class Ui_DragGAN(object):
         self.experiment.setObjectName(u"experiment")
         self.gridLayout_5 = QGridLayout(self.experiment)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.SixBlock_CheckBox = QCheckBox(self.experiment)
+        self.Block_ButtonGroup = QButtonGroup(DragGAN)
+        self.Block_ButtonGroup.setObjectName(u"Block_ButtonGroup")
+        self.Block_ButtonGroup.setExclusive(True)
+        self.Block_ButtonGroup.addButton(self.SixBlock_CheckBox)
+        self.SixBlock_CheckBox.setObjectName(u"SixBlock_CheckBox")
+        self.SixBlock_CheckBox.setEnabled(True)
+        self.SixBlock_CheckBox.setChecked(True)
+
+        self.gridLayout_5.addWidget(self.SixBlock_CheckBox, 6, 3, 1, 1)
+
+        self.SevenBlock_CheckBox = QCheckBox(self.experiment)
+        self.Block_ButtonGroup.addButton(self.SevenBlock_CheckBox)
+        self.SevenBlock_CheckBox.setObjectName(u"SevenBlock_CheckBox")
+        self.SevenBlock_CheckBox.setEnabled(True)
+        self.SevenBlock_CheckBox.setChecked(False)
+
+        self.gridLayout_5.addWidget(self.SevenBlock_CheckBox, 6, 4, 1, 1)
+
+        self.TargetImage_Label = QLabel(self.experiment)
+        self.TargetImage_Label.setObjectName(u"TargetImage_Label")
+
+        self.gridLayout_5.addWidget(self.TargetImage_Label, 0, 1, 1, 1)
+
+        self.FourBlock_CheckBox = QCheckBox(self.experiment)
+        self.Block_ButtonGroup.addButton(self.FourBlock_CheckBox)
+        self.FourBlock_CheckBox.setObjectName(u"FourBlock_CheckBox")
+        self.FourBlock_CheckBox.setEnabled(True)
+        self.FourBlock_CheckBox.setChecked(False)
+
+        self.gridLayout_5.addWidget(self.FourBlock_CheckBox, 6, 1, 1, 1)
+
+        self.TestTimes_Label = QLabel(self.experiment)
+        self.TestTimes_Label.setObjectName(u"TestTimes_Label")
+
+        self.gridLayout_5.addWidget(self.TestTimes_Label, 3, 1, 1, 1)
+
+        self.FiveBlock_CheckBox = QCheckBox(self.experiment)
+        self.Block_ButtonGroup.addButton(self.FiveBlock_CheckBox)
+        self.FiveBlock_CheckBox.setObjectName(u"FiveBlock_CheckBox")
+        self.FiveBlock_CheckBox.setEnabled(True)
+        self.FiveBlock_CheckBox.setChecked(False)
+
+        self.gridLayout_5.addWidget(self.FiveBlock_CheckBox, 6, 2, 1, 1)
+
         self.OnePoint_CheckBox = QCheckBox(self.experiment)
         self.Point_ButtonGroup = QButtonGroup(DragGAN)
         self.Point_ButtonGroup.setObjectName(u"Point_ButtonGroup")
@@ -44,40 +89,45 @@ class Ui_DragGAN(object):
         self.OnePoint_CheckBox.setEnabled(True)
         self.OnePoint_CheckBox.setChecked(False)
 
-        self.gridLayout_5.addWidget(self.OnePoint_CheckBox, 3, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.OnePoint_CheckBox, 5, 1, 1, 1)
 
-        self.SevenBlock_CheckBox = QCheckBox(self.experiment)
-        self.Block_ButtonGroup = QButtonGroup(DragGAN)
-        self.Block_ButtonGroup.setObjectName(u"Block_ButtonGroup")
-        self.Block_ButtonGroup.setExclusive(True)
-        self.Block_ButtonGroup.addButton(self.SevenBlock_CheckBox)
-        self.SevenBlock_CheckBox.setObjectName(u"SevenBlock_CheckBox")
-        self.SevenBlock_CheckBox.setEnabled(True)
-        self.SevenBlock_CheckBox.setChecked(False)
+        self.Experiment_Label = QLabel(self.experiment)
+        self.Experiment_Label.setObjectName(u"Experiment_Label")
 
-        self.gridLayout_5.addWidget(self.SevenBlock_CheckBox, 4, 4, 1, 1)
+        self.gridLayout_5.addWidget(self.Experiment_Label, 0, 0, 1, 1)
 
-        self.FourBlock_CheckBox = QCheckBox(self.experiment)
-        self.Block_ButtonGroup.addButton(self.FourBlock_CheckBox)
-        self.FourBlock_CheckBox.setObjectName(u"FourBlock_CheckBox")
-        self.FourBlock_CheckBox.setEnabled(True)
-        self.FourBlock_CheckBox.setChecked(False)
+        self.Test_PushButton = QPushButton(self.experiment)
+        self.Test_PushButton.setObjectName(u"Test_PushButton")
 
-        self.gridLayout_5.addWidget(self.FourBlock_CheckBox, 4, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.Test_PushButton, 0, 3, 1, 1)
 
-        self.SaveExperiment_PushButton = QPushButton(self.experiment)
-        self.SaveExperiment_PushButton.setObjectName(u"SaveExperiment_PushButton")
+        self.SixtyEightPoints_CheckBox = QCheckBox(self.experiment)
+        self.Point_ButtonGroup.addButton(self.SixtyEightPoints_CheckBox)
+        self.SixtyEightPoints_CheckBox.setObjectName(u"SixtyEightPoints_CheckBox")
+        self.SixtyEightPoints_CheckBox.setChecked(True)
 
-        self.gridLayout_5.addWidget(self.SaveExperiment_PushButton, 0, 4, 1, 1)
-
-        self.TargetImage_Label = QLabel(self.experiment)
-        self.TargetImage_Label.setObjectName(u"TargetImage_Label")
-
-        self.gridLayout_5.addWidget(self.TargetImage_Label, 0, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.SixtyEightPoints_CheckBox, 5, 3, 1, 1)
 
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
-        self.gridLayout_5.addItem(self.verticalSpacer_4, 5, 1, 1, 1)
+        self.gridLayout_5.addItem(self.verticalSpacer_4, 7, 1, 1, 1)
+
+        self.LatentBlock_Label = QLabel(self.experiment)
+        self.LatentBlock_Label.setObjectName(u"LatentBlock_Label")
+
+        self.gridLayout_5.addWidget(self.LatentBlock_Label, 6, 0, 1, 1)
+
+        self.FivePoints_CheckBox = QCheckBox(self.experiment)
+        self.Point_ButtonGroup.addButton(self.FivePoints_CheckBox)
+        self.FivePoints_CheckBox.setObjectName(u"FivePoints_CheckBox")
+
+        self.gridLayout_5.addWidget(self.FivePoints_CheckBox, 5, 2, 1, 1)
+
+        self.TestTimes_LineEdit = QLineEdit(self.experiment)
+        self.TestTimes_LineEdit.setObjectName(u"TestTimes_LineEdit")
+        self.TestTimes_LineEdit.setEnabled(True)
+
+        self.gridLayout_5.addWidget(self.TestTimes_LineEdit, 3, 2, 1, 1)
 
         self.TargetImage_LineEdit = QLineEdit(self.experiment)
         self.TargetImage_LineEdit.setObjectName(u"TargetImage_LineEdit")
@@ -85,54 +135,31 @@ class Ui_DragGAN(object):
 
         self.gridLayout_5.addWidget(self.TargetImage_LineEdit, 2, 1, 1, 3)
 
-        self.Experiment_Label = QLabel(self.experiment)
-        self.Experiment_Label.setObjectName(u"Experiment_Label")
-
-        self.gridLayout_5.addWidget(self.Experiment_Label, 0, 0, 1, 1)
-
-        self.SixBlock_CheckBox = QCheckBox(self.experiment)
-        self.Block_ButtonGroup.addButton(self.SixBlock_CheckBox)
-        self.SixBlock_CheckBox.setObjectName(u"SixBlock_CheckBox")
-        self.SixBlock_CheckBox.setEnabled(True)
-        self.SixBlock_CheckBox.setChecked(True)
-
-        self.gridLayout_5.addWidget(self.SixBlock_CheckBox, 4, 3, 1, 1)
-
         self.TargetImage_ToolButton = QToolButton(self.experiment)
         self.TargetImage_ToolButton.setObjectName(u"TargetImage_ToolButton")
 
         self.gridLayout_5.addWidget(self.TargetImage_ToolButton, 2, 4, 1, 1)
 
-        self.LatentBlock_Label = QLabel(self.experiment)
-        self.LatentBlock_Label.setObjectName(u"LatentBlock_Label")
+        self.SaveExperiment_PushButton = QPushButton(self.experiment)
+        self.SaveExperiment_PushButton.setObjectName(u"SaveExperiment_PushButton")
 
-        self.gridLayout_5.addWidget(self.LatentBlock_Label, 4, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.SaveExperiment_PushButton, 0, 4, 1, 1)
 
-        self.Test_PushButton = QPushButton(self.experiment)
-        self.Test_PushButton.setObjectName(u"Test_PushButton")
+        self.DragTimes_Label = QLabel(self.experiment)
+        self.DragTimes_Label.setObjectName(u"DragTimes_Label")
 
-        self.gridLayout_5.addWidget(self.Test_PushButton, 0, 3, 1, 1)
+        self.gridLayout_5.addWidget(self.DragTimes_Label, 4, 1, 1, 1)
 
-        self.FiveBlock_CheckBox = QCheckBox(self.experiment)
-        self.Block_ButtonGroup.addButton(self.FiveBlock_CheckBox)
-        self.FiveBlock_CheckBox.setObjectName(u"FiveBlock_CheckBox")
-        self.FiveBlock_CheckBox.setEnabled(True)
-        self.FiveBlock_CheckBox.setChecked(False)
+        self.DragTimes_LineEdit = QLineEdit(self.experiment)
+        self.DragTimes_LineEdit.setObjectName(u"DragTimes_LineEdit")
+        self.DragTimes_LineEdit.setEnabled(True)
 
-        self.gridLayout_5.addWidget(self.FiveBlock_CheckBox, 4, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.DragTimes_LineEdit, 4, 2, 1, 1)
 
-        self.FivePoints_CheckBox = QCheckBox(self.experiment)
-        self.Point_ButtonGroup.addButton(self.FivePoints_CheckBox)
-        self.FivePoints_CheckBox.setObjectName(u"FivePoints_CheckBox")
+        self.Experience_PushButton = QPushButton(self.experiment)
+        self.Experience_PushButton.setObjectName(u"Experience_PushButton")
 
-        self.gridLayout_5.addWidget(self.FivePoints_CheckBox, 3, 2, 1, 1)
-
-        self.SixtyEightPoints_CheckBox = QCheckBox(self.experiment)
-        self.Point_ButtonGroup.addButton(self.SixtyEightPoints_CheckBox)
-        self.SixtyEightPoints_CheckBox.setObjectName(u"SixtyEightPoints_CheckBox")
-        self.SixtyEightPoints_CheckBox.setChecked(True)
-
-        self.gridLayout_5.addWidget(self.SixtyEightPoints_CheckBox, 3, 3, 1, 1)
+        self.gridLayout_5.addWidget(self.Experience_PushButton, 4, 3, 1, 1)
 
 
         self.gridLayout.addWidget(self.experiment, 2, 0, 1, 1)
@@ -437,7 +464,7 @@ class Ui_DragGAN(object):
         DragGAN.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(DragGAN)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1076, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1126, 21))
         DragGAN.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(DragGAN)
         self.statusbar.setObjectName(u"statusbar")
@@ -450,19 +477,24 @@ class Ui_DragGAN(object):
 
     def retranslateUi(self, DragGAN):
         DragGAN.setWindowTitle(QCoreApplication.translate("DragGAN", u"MainWindow", None))
-        self.OnePoint_CheckBox.setText(QCoreApplication.translate("DragGAN", u"1 point", None))
-        self.SevenBlock_CheckBox.setText(QCoreApplication.translate("DragGAN", u"7", None))
-        self.FourBlock_CheckBox.setText(QCoreApplication.translate("DragGAN", u"4", None))
-        self.SaveExperiment_PushButton.setText(QCoreApplication.translate("DragGAN", u"Save", None))
-        self.TargetImage_Label.setText(QCoreApplication.translate("DragGAN", u"Target Image", None))
-        self.Experiment_Label.setText(QCoreApplication.translate("DragGAN", u"Experiment", None))
         self.SixBlock_CheckBox.setText(QCoreApplication.translate("DragGAN", u"6", None))
-        self.TargetImage_ToolButton.setText(QCoreApplication.translate("DragGAN", u"...", None))
-        self.LatentBlock_Label.setText(QCoreApplication.translate("DragGAN", u"Latent Block", None))
-        self.Test_PushButton.setText(QCoreApplication.translate("DragGAN", u"Test", None))
+        self.SevenBlock_CheckBox.setText(QCoreApplication.translate("DragGAN", u"7", None))
+        self.TargetImage_Label.setText(QCoreApplication.translate("DragGAN", u"Target Image", None))
+        self.FourBlock_CheckBox.setText(QCoreApplication.translate("DragGAN", u"4", None))
+        self.TestTimes_Label.setText(QCoreApplication.translate("DragGAN", u"Test times", None))
         self.FiveBlock_CheckBox.setText(QCoreApplication.translate("DragGAN", u"5", None))
-        self.FivePoints_CheckBox.setText(QCoreApplication.translate("DragGAN", u"5 points", None))
+        self.OnePoint_CheckBox.setText(QCoreApplication.translate("DragGAN", u"1 point", None))
+        self.Experiment_Label.setText(QCoreApplication.translate("DragGAN", u"Experiment", None))
+        self.Test_PushButton.setText(QCoreApplication.translate("DragGAN", u"Test", None))
         self.SixtyEightPoints_CheckBox.setText(QCoreApplication.translate("DragGAN", u"68 points", None))
+        self.LatentBlock_Label.setText(QCoreApplication.translate("DragGAN", u"Latent Block", None))
+        self.FivePoints_CheckBox.setText(QCoreApplication.translate("DragGAN", u"5 points", None))
+        self.TestTimes_LineEdit.setText(QCoreApplication.translate("DragGAN", u"1", None))
+        self.TargetImage_ToolButton.setText(QCoreApplication.translate("DragGAN", u"...", None))
+        self.SaveExperiment_PushButton.setText(QCoreApplication.translate("DragGAN", u"Save", None))
+        self.DragTimes_Label.setText(QCoreApplication.translate("DragGAN", u"Drag times", None))
+        self.DragTimes_LineEdit.setText(QCoreApplication.translate("DragGAN", u"200", None))
+        self.Experience_PushButton.setText(QCoreApplication.translate("DragGAN", u"Test", None))
         self.Browse_PushButton.setText(QCoreApplication.translate("DragGAN", u"Browse...", None))
         self.Minus4Seed_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
         self.Recent_PushButton.setText(QCoreApplication.translate("DragGAN", u"Recent...", None))

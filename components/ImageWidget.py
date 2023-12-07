@@ -73,7 +73,7 @@ class ImageWidget(QWidget):
         super().resizeEvent(event)
         self.compute_size()
 
-    def save_image(self, filename, format, quality):
+    def save_image(self, filename, format, quality, is_experience=False):
         """
         pixmap.save()方法是用于将QPixmap对象保存为文件的方法，它可以写入多种不同的文件格式，具体支持的格式取决于Qt库和操作系统的支持情况。
         在大多数情况下，Qt库支持的格式包括：
@@ -90,7 +90,10 @@ class ImageWidget(QWidget):
         short_name = os.path.basename(filename)
         if self.pixmap:
             if self.pixmap.save(filename, format, quality):
-                QMessageBox.information(self, "Save Image", f"Image saved as {short_name} successfully!")
+                if is_experience:
+                    print(f"Image Saved as {short_name} successfully!")
+                else:
+                    QMessageBox.information(self, "Save Image", f"Image saved as {short_name} successfully!")
             else:
                 QMessageBox.critical(self, "Error", f"Save image as {short_name} failed!")
         else:
