@@ -14,6 +14,8 @@ class ImageWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.BASE_SIZE = 512
+
         self.image_label = ImageLabel(self)
         self.image_label.setScaledContents(True)
         self.image_label.installEventFilter(self)
@@ -23,8 +25,9 @@ class ImageWidget(QWidget):
 
         self.painter = QPainter()
 
-    def set_image(self, file_name):
+    def set_image(self, file_name, base_size=512):
         try:
+            self.BASE_SIZE = base_size
             self.pixmap = QPixmap().fromImage(QImage(file_name))
             pix_map = self.pixmap
             self.image_rate = pix_map.width() / pix_map.height()
@@ -34,7 +37,8 @@ class ImageWidget(QWidget):
             QMessageBox.critical(self, "Error", "Load image failed!")
             print(e)
 
-    def set_image_from_array(self, image):
+    def set_image_from_array(self, image, base_size=512):
+        self.BASE_SIZE = base_size
         img = image.cpu().numpy()
         img = Image.fromarray(img)
         self.pixmap = img.toqpixmap()
@@ -49,15 +53,19 @@ class ImageWidget(QWidget):
             h = self.size().height()
             scale_w = int(h * self.image_rate)
 
+            scale = 1
             if scale_w <= w:
                 self.image_label.resize(QSize(scale_w, h))
                 self.image_label.setProperty(
                     "pos", QPoint(int((w - scale_w) / 2), 0))
+                scale = scale_w/BASE_SIZE
             else:
                 scale_h = int(w / self.image_rate)
                 self.image_label.resize(QSize(w, scale_h))
                 self.image_label.setProperty(
                     "pos", QPoint(0, int((h - scale_h) / 2)))
+                scale = scale_h/BASE_SIZE
+            self.set_image_scale(scale)
         else:
             self.image_label.resize(self.size())
 
@@ -87,6 +95,9 @@ class ImageWidget(QWidget):
                 QMessageBox.critical(self, "Error", f"Save image as {short_name} failed!")
         else:
             QMessageBox.critical(self, "Error", "No image loaded!")
+
+    def set_image_scale(self, image_scale):
+        self.image_label.setImageScale(image_scale)
 
     def set_status(self, new_status):
         self.image_label.set_status(new_status)

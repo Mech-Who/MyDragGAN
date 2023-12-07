@@ -24,6 +24,8 @@ class ImageLabel(QLabel):
         self.pen.setColor(QColor(0, 0, 255))  # 设置画笔颜色为蓝色
         self.points = []
 
+        self.image_scale = 1
+
         self.status = LabelStatus.Readonly
 
     def set_image(self, file_name):
@@ -46,9 +48,12 @@ class ImageLabel(QLabel):
             QMessageBox.critical(self, "Error", "Image loading failed!")
             print(f"Error: {e}")
 
+    def setImageScale(self, image_scale):
+        self.image_scale = image_scale
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.status == LabelStatus.Draw:
-            self.points.append(event.position())
+            self.points.append(event.position()/self.image_scale)
             self.update()
             if len(self.points) % 2 == 0:
                 self.status = LabelStatus.Readonly
@@ -80,7 +85,7 @@ class ImageLabel(QLabel):
                 else:
                     self.pen.setColor(QColor(0, 0, 255))  # 设置画笔颜色为蓝色
                 self.painter.setPen(self.pen)
-                self.painter.drawPoint(pos)
+                self.painter.drawPoint(pos*self.image_scale)
             self.painter.end()
         return res
 

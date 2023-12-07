@@ -60,6 +60,7 @@ class MainWindow(ConfigMainWindow):
         self.ui.Seed_LineEdit.setText(str(self.seed))
         self.min_seed = 0
         self.max_seed = 65535
+        self.ui.Seed_LineEdit.setPlaceholderText(f"{self.min_seed} - {self.max_seed}")
 
         self.random_seed = False
         self.ui.RandomSeed_CheckBox.setChecked(self.random_seed)
@@ -321,7 +322,6 @@ class MainWindow(ConfigMainWindow):
             points = []
             for i in range(init_pts.shape[0]):
                 points.append(QPoint(int(init_pts[i][1]), int(init_pts[i][0])))
-            for i in range(tar_pts.shape[0]):
                 points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
             self.ui.Image_Widget.clear_points()
             self.ui.Image_Widget.add_points(points)
@@ -353,6 +353,19 @@ class MainWindow(ConfigMainWindow):
         self.ui.Pickle_LineEdit.setText(os.path.basename(self.pickle_path))
         self.addConfig("last_pickle", self.pickle_path)
         
+
+    @Slot()
+    def on_Seed_LineEdit_textChanged(self):
+        try:
+            new_seed = int(self.ui.Seed_LineEdit.text())
+            if new_seed <= self.max_seed and new_seed >= self.min_seed:
+                self.seed = new_seed
+            else:
+                self.ui.Seed_LineEdit.setText(str(self.seed))
+        except ValueError as e:
+            print("invalid seed")
+
+
 
     @Slot()
     def on_Minus4Seed_PushButton_clicked(self):
@@ -487,6 +500,115 @@ class MainWindow(ConfigMainWindow):
         filename = os.path.join(image_dir, filename)
         self.save_image(filename, image_format, 100)
         print(f"save image to {filename}")
+
+################## test ##################
+
+    @Slot()
+    def on_Test_PushButton_clicked(self):
+        print("test")
+        import dlib
+
+        # 保存图片
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        image_format = "png"
+        filename = f"{pickle}_{self.seed}.{image_format}"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_dir = os.path.join(base_dir, "save_images", "edited_images")
+        filename = os.path.join(image_dir, filename)
+        self.save_image(filename, image_format, 100)
+        print(f"save image as {filename}")
+        ###################################################################################################################
+        # 参数设置
+
+        shape_predictor = "./landmarks/shape_predictor_68_face_landmarks.dat"
+        origin_file = filename
+        target_file = self.ui.TargetImage_LineEdit.text()
+
+        ###################################################################################################################
+        # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
+        detector = dlib.get_frontal_face_detector()			# 1.1、基于dlib的人脸检测器
+        predictor = dlib.shape_predictor(shape_predictor)	# 1.2、基于dlib的关键点定位（68个关键点）
+
+        # （2）图像预处理
+        # 2.1、读取图像
+        origin_image = cv2.imread(origin_file)
+        target_image = cv2.imread(target_file)
+
+        q_size = self.ui.Image_Widget.image_label.size()
+        # image_rate = self.ui.Image_Widget.image_rate
+
+        width = q_size.width() 		        # 指定宽度
+
+        (o_h, o_w) = origin_image.shape[:2]	# 获取图像的宽和高
+        o_r = width / float(o_w)			# 计算比例
+        o_dim = (width, int(o_h * o_r))		# 按比例缩放高度: (宽, 高)
+
+        (t_h, t_w) = target_image.shape[:2]	# 获取图像的宽和高
+        t_r = width / float(t_w)			# 计算比例
+        t_dim = (width, int(t_h * t_r))		# 按比例缩放高度: (宽, 高)
+
+        # self.ui.Image_Widget.set_image_scale(o_r)
+        # 2.2、图像缩放
+        origin_image = cv2.resize(origin_image, o_dim, interpolation=cv2.INTER_AREA)
+        target_image = cv2.resize(target_image, t_dim, interpolation=cv2.INTER_AREA)
+        # 2.3、灰度图
+        origin_gray = cv2.cvtColor(origin_image, cv2.COLOR_BGR2GRAY)
+        target_gray = cv2.cvtColor(target_image, cv2.COLOR_BGR2GRAY)
+
+        # （3）人脸检测
+        origin_rects = detector(origin_gray, 1)				# 若有多个目标，则返回多个人脸框
+        target_rects = detector(target_gray, 1)				# 若有多个目标，则返回多个人脸框
+
+        # （4）遍历检测得到的【人脸框 + 关键点】
+        # rect: 人脸框
+        for o_rect, t_rect in zip(origin_rects, target_rects):		
+            # 4.1、定位脸部的关键点（返回的是一个结构体信息，需要遍历提取坐标）
+            o_shape = predictor(origin_gray, o_rect)
+            t_shape = predictor(target_gray, t_rect)
+            # 4.2、遍历shape提取坐标并进行格式转换: ndarray
+            o_shape = utils.shape_to_np(o_shape)
+            t_shape = utils.shape_to_np(t_shape)
+            # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
+            points = []
+            for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
+                points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+            print(points)
+            self.ui.Image_Widget.add_points(points)
+
+        self.on_Start_PushButton_clicked()
+
+    @Slot()
+    def on_SaveExperiment_PushButton_clicked(self):
+        target_file = self.ui.TargetImage_LineEdit.text()
+        target_file = os.path.basename(target_file)
+        target_seed = target_file.split(os.extsep)[0].split("_")[1]
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        image_format = "png"
+        filename = f"{pickle}_{self.seed}_{target_seed}.{image_format}"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_dir = os.path.join(base_dir, "save_images", "experiment_images")
+        filename = os.path.join(image_dir, filename)
+        self.save_image(filename, image_format, 100)
+        print(f"save image to {filename}")
+
+
+    @Slot()
+    def on_TargetImage_LineEdit_editingFinished(self):
+        print(f"target image line edit: {self.ui.TargetImage_LineEdit.text()}")
+
+    @Slot()
+    def on_TargetImage_ToolButton_clicked(self):
+        print("target image tool button")
+        file = QFileDialog.getOpenFileName(
+            self, "Select Target Files", os.path.realpath("./save_images/generated_images"), "Image files (*.png)")
+        target_image_path = file[0]
+        if not os.path.isfile(target_image_path):
+            return
+        # self.ui.Target_LineEdit.setText(os.path.basename(target_image_path))
+        self.ui.TargetImage_LineEdit.setText(target_image_path)
+
+################## mask ##################
 
     @Slot()
     def on_FlexibleArea_PushButton_clicked(self):

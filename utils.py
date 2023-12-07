@@ -55,6 +55,11 @@ def create_square_mask(
         or center[1] < radius
         or center[1] >= width - radius
     ):
+        print(f"\nwrong place:\n center[0]: {center[0]}, center[1]: {center[1]}, height: {height}, width: {width}, radius: {radius}\n")
+        print(f" center[0] < radius: {center[0] < radius}")
+        print(f" center[0] >= height - radius: {center[0] >= height - radius}")
+        print(f" center[1] < radius: {center[1] < radius}")
+        print(f" center[1] >= width - radius: {center[1] >= width - radius}\n")
         raise ValueError("center and radius must be within the bounds of the mask")
 
     mask = torch.zeros((height, width), dtype=torch.float32)
@@ -64,3 +69,13 @@ def create_square_mask(
     y2 = int(center[0]) + radius
     mask[y1 : y2 + 1, x1 : x2 + 1] = 1.0
     return mask.bool()
+
+
+def shape_to_np(shape, dtype="int"):
+        """获取68个关键点的坐标，并转换为ndarray格式"""
+        # （1）创建68*2模板。68个关键点坐标(x,y)
+        coords = np.zeros((shape.num_parts, 2), dtype=dtype)
+        # （2）遍历每一个关键点, 得到坐标(x,y)
+        for i in range(0, shape.num_parts):
+            coords[i] = (shape.part(i).x, shape.part(i).y)
+        return coords
