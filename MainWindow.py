@@ -18,6 +18,7 @@ from components.ConfigMainWindow import ConfigMainWindow
 # from model import StyleGAN
 from stylegan2_ada.model import StyleGAN
 import utils as utils
+from metrics.md_metrics import mean_distance
 
 import torch.nn.functional as torch_F
 import torch
@@ -83,6 +84,8 @@ class MainWindow(ConfigMainWindow):
 
         self.isDragging = False
 
+        self.showPoints = False
+
         # 设置默认步长
         self.step_size = self.DEFAULT_STEP_SIZE
         self.ui.StepSize_LineEdit.setText(str(self.step_size))
@@ -94,6 +97,17 @@ class MainWindow(ConfigMainWindow):
 
         self.steps = 0
         self.ui.StepNumber_Label.setText(str(self.steps))
+
+        #### Experiment ####
+
+        self.only_one_point = False
+        self.five_points = False
+        self.sixty_eight_points = True
+
+        self.fourth_block = False
+        self.fifth_block = False
+        self.sixth_block = True
+        self.seventh_block = False
 
         #### 初始化ImageLabel ####
         # 设置ImageLabel的自适应大小比率
@@ -158,8 +172,19 @@ class MainWindow(ConfigMainWindow):
         self.W = torch.from_numpy(temp_W).to(self.device).float()
         self.W.requires_grad_(False)
 
-        self.W_layers_to_optimize = self.W[:, :6, :].detach().clone().requires_grad_(True)
-        self.W_layers_to_fixed = self.W[:, 6:, :].detach().clone().requires_grad_(False)
+        # 设置不同block
+        if self.fourth_block:
+            self.W_layers_to_optimize = self.W[:, :4, :].detach().clone().requires_grad_(True)
+            self.W_layers_to_fixed = self.W[:, 4:, :].detach().clone().requires_grad_(False)
+        elif self.fifth_block:
+            self.W_layers_to_optimize = self.W[:, :5, :].detach().clone().requires_grad_(True)
+            self.W_layers_to_fixed = self.W[:, 5:, :].detach().clone().requires_grad_(False)
+        elif self.sixth_block:
+            self.W_layers_to_optimize = self.W[:, :6, :].detach().clone().requires_grad_(True)
+            self.W_layers_to_fixed = self.W[:, 6:, :].detach().clone().requires_grad_(False)
+        elif self.seventh_block:
+            self.W_layers_to_optimize = self.W[:, :7, :].detach().clone().requires_grad_(True)
+            self.W_layers_to_fixed = self.W[:, 7:, :].detach().clone().requires_grad_(False)
 
         # 4. 初始化优化器
         self.optimizer = torch.optim.Adam([self.W_layers_to_optimize], lr=lr)
@@ -292,8 +317,10 @@ class MainWindow(ConfigMainWindow):
             F_for_point_tracking_resized = torch_F.interpolate(F_for_point_tracking, size=(512, 512),
                                                                mode="bilinear", align_corners=True).detach()
             new_init_pts = self.point_tracking(F_for_point_tracking_resized, init_pts, r2=r2)
-        print(f"Loss: {loss.item():0.4f}, tar pts: {tar_pts.cpu().numpy()}, new init pts: {new_init_pts.cpu().numpy()}")
-        print('\n')
+        if self.showPoints:
+            print(f"tar pts: {tar_pts.cpu().numpy()}, new init pts: {new_init_pts.cpu().numpy()}")
+        print(f"tar pts length: {len(tar_pts.cpu().numpy())}, new init pts length: {len(new_init_pts.cpu().numpy())}")
+        print(f"Loss: {loss.item():0.4f} mean distance: {mean_distance(new_init_pts.cpu().numpy(), tar_pts.cpu().numpy()):.4f}\n")
         # print("update init_pts as Point Tracking")
 
         return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img)
@@ -501,7 +528,7 @@ class MainWindow(ConfigMainWindow):
         self.save_image(filename, image_format, 100)
         print(f"save image to {filename}")
 
-################## test ##################
+################## experiment ##################
 
     @Slot()
     def on_Test_PushButton_clicked(self):
@@ -520,7 +547,16 @@ class MainWindow(ConfigMainWindow):
         ###################################################################################################################
         # 参数设置
 
-        shape_predictor = "./landmarks/shape_predictor_68_face_landmarks.dat"
+        dat_68 = "./landmarks/shape_predictor_68_face_landmarks.dat"
+        dat_5 = "./landmarks/shape_predictor_5_face_landmarks.dat"
+
+        shape_predictor = ""
+        if self.only_one_point:
+            shape_predictor = dat_68
+        if self.five_points:
+            shape_predictor = dat_5
+        if self.sixty_eight_points:
+            shape_predictor = dat_68
         origin_file = filename
         target_file = self.ui.TargetImage_LineEdit.text()
 
@@ -573,16 +609,17 @@ class MainWindow(ConfigMainWindow):
             for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
                 points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
                 points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
-            print(points)
+                if self.only_one_point:
+                    break
             self.ui.Image_Widget.add_points(points)
-
-        self.on_Start_PushButton_clicked()
 
     @Slot()
     def on_SaveExperiment_PushButton_clicked(self):
         target_file = self.ui.TargetImage_LineEdit.text()
         target_file = os.path.basename(target_file)
-        target_seed = target_file.split(os.extsep)[0].split("_")[1]
+        target_seed = target_file.split(os.extsep)[0]
+        print(target_seed)
+        target_seed = target_seed.split("_")[1]
         pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
         image_format = "png"
         filename = f"{pickle}_{self.seed}_{target_seed}.{image_format}"
@@ -607,6 +644,62 @@ class MainWindow(ConfigMainWindow):
             return
         # self.ui.Target_LineEdit.setText(os.path.basename(target_image_path))
         self.ui.TargetImage_LineEdit.setText(target_image_path)
+
+    @Slot()
+    def on_OnePoint_CheckBox_stateChanged(self):
+        print("one point")
+        if self.ui.OnePoint_CheckBox.isChecked():
+            self.only_one_point = True
+        else:
+            self.only_one_point = False
+
+    @Slot()
+    def on_FivePoints_CheckBox_stateChanged(self):
+        print("five points")
+        if self.ui.FivePoints_CheckBox.isChecked():
+            self.five_points = True
+        else:
+            self.five_points = False
+
+    @Slot()
+    def on_SixtyEightPoints_CheckBox_stateChanged(self):
+        print("sixty eight points")
+        if self.ui.SixtyEightPoints_CheckBox.isChecked():
+            self.sixty_eight_points = True
+        else:
+            self.sixty_eight_points = False
+
+    @Slot()
+    def on_FourBlock_CheckBox_stateChanged(self):
+        print("four block")
+        if self.ui.FourBlock_CheckBox.isChecked():
+            self.fourth_block = True
+        else:
+            self.fourth_block = False
+    
+    @Slot()
+    def on_FiveBlock_CheckBox_stateChanged(self):
+        print("five block")
+        if self.ui.FiveBlock_CheckBox.isChecked():
+            self.fifth_block = True
+        else:
+            self.fifth_block = False
+
+    @Slot()
+    def on_SixBlock_CheckBox_stateChanged(self):
+        print("six block")
+        if self.ui.SixBlock_CheckBox.isChecked():
+            self.sixth_block = True
+        else:
+            self.sixth_block = False
+
+    @Slot()
+    def on_SevenBlock_CheckBox_stateChanged(self):
+        print("seven block")
+        if self.ui.SevenBlock_CheckBox.isChecked():
+            self.seventh_block = True
+        else:
+            self.seventh_block = False
 
 ################## mask ##################
 
