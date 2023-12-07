@@ -58,13 +58,13 @@ class ImageWidget(QWidget):
                 self.image_label.resize(QSize(scale_w, h))
                 self.image_label.setProperty(
                     "pos", QPoint(int((w - scale_w) / 2), 0))
-                scale = scale_w/BASE_SIZE
+                scale = scale_w/self.BASE_SIZE
             else:
                 scale_h = int(w / self.image_rate)
                 self.image_label.resize(QSize(w, scale_h))
                 self.image_label.setProperty(
                     "pos", QPoint(0, int((h - scale_h) / 2)))
-                scale = scale_h/BASE_SIZE
+                scale = scale_h/self.BASE_SIZE
             self.set_image_scale(scale)
         else:
             self.image_label.resize(self.size())
