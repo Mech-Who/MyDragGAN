@@ -238,15 +238,16 @@ class MainWindow(ConfigMainWindow):
     def on_Test_PushButton_clicked(self):
         print("test")
         import dlib
+        import cv2
 
         # 保存图片
         pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
         image_format = "png"
-        filename = f"{pickle}_{self.seed}.{image_format}"
+        filename = f"{pickle}_{self.DragGAN.seed}.{image_format}"
         base_dir = os.path.dirname(os.path.abspath(__file__))
         image_dir = os.path.join(base_dir, "save_images", "edited_images")
         filename = os.path.join(image_dir, filename)
-        self.save_image(filename, image_format, 100)
+        self.ui.Image_Widget.save_image(filename, image_format, 100)
         print(f"save image as {filename}")
         ###################################################################################################################
         # 参数设置
@@ -310,7 +311,7 @@ class MainWindow(ConfigMainWindow):
             t_shape = utils.shape_to_np(t_shape)
             # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
             points = []
-            if self.only_one_point:
+            if self.DragGAN.only_one_point:
                 o_x, o_y = o_shape[33]
                 t_x, t_y = t_shape[33]
                 points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
@@ -330,9 +331,9 @@ class MainWindow(ConfigMainWindow):
         target_seed = target_file.split(os.extsep)[0]
         print(target_seed)
         target_seed = target_seed.split("_")[1]
-        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        pickle = os.path.basename(self.DragGAN.pickle_path).split(os.extsep)[0]
         image_format = "png"
-        filename = f"{pickle}_{self.seed}_{target_seed}.{image_format}"
+        filename = f"{pickle}_{self.DragGAN.seed}_{target_seed}.{image_format}"
         base_dir = os.path.dirname(os.path.abspath(__file__))
         image_dir = os.path.join(base_dir, "save_images", "experiment_images")
         filename = os.path.join(image_dir, filename)
@@ -343,15 +344,15 @@ class MainWindow(ConfigMainWindow):
     def on_TestTimes_LineEdit_editingFinished(self):
         test_times = int(self.ui.TestTimes_LineEdit.text())
         if 0 < test_times:
-            self.test_times = test_times
-        print(self.test_times)
+            self.DragGAN.test_times = test_times
+        print(self.DragGAN.test_times)
 
     @Slot()
     def on_DragTimes_LineEdit_editingFinished(self):
         drag_times = int(self.ui.DragTimes_LineEdit.text())
         if 0 < drag_times:
-            self.drag_times = drag_times
-        print(self.drag_times)
+            self.DragGAN.drag_times = drag_times
+        print(self.DragGAN.drag_times)
 
     @Slot()
     def on_Experience_PushButton_clicked(self):
@@ -390,57 +391,57 @@ class MainWindow(ConfigMainWindow):
     def on_OnePoint_CheckBox_stateChanged(self):
         print("one point")
         if self.ui.OnePoint_CheckBox.isChecked():
-            self.only_one_point = True
+            self.DragGAN.only_one_point = True
         else:
-            self.only_one_point = False
+            self.DragGAN.only_one_point = False
 
     @Slot()
     def on_FivePoints_CheckBox_stateChanged(self):
         print("five points")
         if self.ui.FivePoints_CheckBox.isChecked():
-            self.five_points = True
+            self.DragGAN.five_points = True
         else:
-            self.five_points = False
+            self.DragGAN.five_points = False
 
     @Slot()
     def on_SixtyEightPoints_CheckBox_stateChanged(self):
         print("sixty eight points")
         if self.ui.SixtyEightPoints_CheckBox.isChecked():
-            self.sixty_eight_points = True
+            self.DragGAN.sixty_eight_points = True
         else:
-            self.sixty_eight_points = False
+            self.DragGAN.sixty_eight_points = False
 
     @Slot()
     def on_FourBlock_CheckBox_stateChanged(self):
         print("four block")
         if self.ui.FourBlock_CheckBox.isChecked():
-            self.fourth_block = True
+            self.DragGAN.fourth_block = True
         else:
-            self.fourth_block = False
+            self.DragGAN.fourth_block = False
     
     @Slot()
     def on_FiveBlock_CheckBox_stateChanged(self):
         print("five block")
         if self.ui.FiveBlock_CheckBox.isChecked():
-            self.fifth_block = True
+            self.DragGAN.fifth_block = True
         else:
-            self.fifth_block = False
+            self.DragGAN.fifth_block = False
 
     @Slot()
     def on_SixBlock_CheckBox_stateChanged(self):
         print("six block")
         if self.ui.SixBlock_CheckBox.isChecked():
-            self.sixth_block = True
+            self.DragGAN.sixth_block = True
         else:
-            self.sixth_block = False
+            self.DragGAN.sixth_block = False
 
     @Slot()
     def on_SevenBlock_CheckBox_stateChanged(self):
         print("seven block")
         if self.ui.SevenBlock_CheckBox.isChecked():
-            self.seventh_block = True
+            self.DragGAN.seventh_block = True
         else:
-            self.seventh_block = False
+            self.DragGAN.seventh_block = False
 
 ################## mask ##################
 
