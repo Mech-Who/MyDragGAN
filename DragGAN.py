@@ -7,6 +7,7 @@ import os
 import torch
 import torch.nn.functional as torch_F
 from stylegan2_ada.model import StyleGAN
+from metrics.md_metrics import mean_distance
 
 from PySide6.QtCore import QPoint, QThread, Signal
 
@@ -46,6 +47,20 @@ class DragGAN:
         self.r2 = self.DEFAULT_R2
         self.steps = 0
         self.isDragging = False
+        self.showPoints = False
+
+        # experience
+        self.only_one_point = False
+        self.five_points = False
+        self.sixty_eight_points = True
+
+        self.fourth_block = False
+        self.fifth_block = False
+        self.sixth_block = True
+        self.seventh_block = False
+
+        self.test_times = 1
+        self.drag_times = 200
 
         # 保存图像数据
         self.points = []
@@ -231,11 +246,16 @@ class DragGAN:
             F_for_point_tracking_resized = torch_F.interpolate(F_for_point_tracking, size=(512, 512),
                                                                mode="bilinear", align_corners=True).detach()
             new_init_pts = self.pointTracking(F_for_point_tracking_resized, init_pts, r2=r2)
+        md = mean_distance(new_init_pts.cpu().numpy(), tar_pts.cpu().numpy())
         print(f"Loss: {loss.item():0.4f}, tar pts: {tar_pts.cpu().numpy()}, new init pts: {new_init_pts.cpu().numpy()}\n")
         # print("update init_pts as Point Tracking")
 
-        return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img, loss.item())
+        return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img, loss.item(), md)
         # return True, (np.array([0, 0]), np.array([1, 1]), np.array([0, 1]))
+
+    def drag_for(self, index):
+        pass
+
 
     # def drag_thread(self):
     #     points = self.ui.Image_Widget.get_points()
@@ -271,7 +291,7 @@ class DragGAN:
 
 class DragThread(QThread):
     drag_finished = Signal()
-    once_finished = Signal(torch.Tensor, np.ndarray, np.ndarray, int)
+    once_finished = Signal(torch.Tensor, list, int, int)
 
     def __init__(self, draggan_model, points):
         super().__init__()
@@ -280,6 +300,8 @@ class DragThread(QThread):
 
     def run(self):
         points = self.points
+        if len(points) < 2:
+            return
         if len(points) % 2 == 1:
             points = points[:-1]
         init_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0])
@@ -293,7 +315,7 @@ class DragThread(QThread):
             # 迭代一次
             status, ret = self.DragGAN.drag(init_pts, tar_pts, allow_error_px=5, r1=3, r2=13)
             if status:
-                init_pts, _, image, once_loss = ret
+                init_pts, _, image, once_loss, md = ret
             else:
                 self.DragGAN.isDragging = False
                 return
@@ -305,5 +327,59 @@ class DragThread(QThread):
                 points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
 
             self.DragGAN.steps += 1
-            self.once_finished(image, init_pts, tar_pts, once_loss)
+            self.once_finished(image, points, once_loss, self.DragGAN.steps)
         self.drag_finished()
+
+
+class ExperienceThread(QThread):
+    experience_finished = Signal()
+    once_finished = Signal(torch.Tensor, np.ndarray, np.ndarray, int)
+
+    def __init__(self, draggan_model, points):
+        super().__init__()
+        self.DragGAN = draggan_model
+        self.points = points
+
+    def run(self):
+        points = self.ui.Image_Widget.get_points()
+        if len(points) < 2:
+            return
+        if len(points) % 2 == 1:
+            points = points[:-1]
+        init_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0])
+        tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
+        init_pts = np.vstack(init_pts)[:, ::-1].copy()
+        tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
+        self.prepare2Drag(init_pts, lr=self.step_size)
+        
+        self.steps = 0
+        result = {"loss": 0, "mean_distance": 0}
+        for i in range(self.drag_times):
+            print(f"current[{index+1}/{self.test_times}] drag times [{i+1}/{self.drag_times}]")
+            if not self.isDragging:
+                break
+            # 迭代一次
+            try:
+                status, ret = self.drag_experience(init_pts, tar_pts, allow_error_px=5, r1=3, r2=13)
+                if status:
+                    init_pts, _, image, result = ret
+                else:
+                    self.isDragging = False
+                    return
+            except Exception as e:
+                print(f"Error:{e}")
+                self.isDragging = False
+                return
+            # 显示最新的图像  
+            points = []
+            for i in range(init_pts.shape[0]):
+                points.append(QPoint(int(init_pts[i][1]), int(init_pts[i][0])))
+                points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
+            self.ui.Image_Widget.clear_points()
+            self.ui.Image_Widget.add_points(points)
+            self.update_image(image)
+
+            self.steps += 1
+            self.ui.StepNumber_Label.setText(str(self.steps))
+        print(f"current[{index+1}/{self.test_times}] {self.drag_times} times experience: loss: {result['loss']}, mean_distance: {result['mean_distance']}")
+        return result
