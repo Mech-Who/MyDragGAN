@@ -25,7 +25,7 @@ import torch.nn.functional as torch_F
 import torch
 import copy
 import numpy as np
-from DragGAN import DragGAN, DragThread
+from DragGAN import DragGAN, DragThread, ExperienceThread
 
 
 class MainWindow(ConfigMainWindow):
@@ -232,6 +232,230 @@ class MainWindow(ConfigMainWindow):
         filename = os.path.join(image_dir, filename)
         self.ui.Image_Widget.save_image(filename, image_format, 100)
 
+################## experiment ##################
+
+    @Slot()
+    def on_Test_PushButton_clicked(self):
+        print("test")
+        import dlib
+
+        # 保存图片
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        image_format = "png"
+        filename = f"{pickle}_{self.seed}.{image_format}"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_dir = os.path.join(base_dir, "save_images", "edited_images")
+        filename = os.path.join(image_dir, filename)
+        self.save_image(filename, image_format, 100)
+        print(f"save image as {filename}")
+        ###################################################################################################################
+        # 参数设置
+
+        dat_68 = "./landmarks/shape_predictor_68_face_landmarks.dat"
+        dat_5 = "./landmarks/shape_predictor_5_face_landmarks.dat"
+
+        shape_predictor = ""
+        if self.only_one_point:
+            shape_predictor = dat_68
+        if self.five_points:
+            shape_predictor = dat_5
+        if self.sixty_eight_points:
+            shape_predictor = dat_68
+        origin_file = filename
+        target_file = self.ui.TargetImage_LineEdit.text()
+
+        ###################################################################################################################
+        # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
+        detector = dlib.get_frontal_face_detector()			# 1.1、基于dlib的人脸检测器
+        predictor = dlib.shape_predictor(shape_predictor)	# 1.2、基于dlib的关键点定位（68个关键点）
+
+        # （2）图像预处理
+        # 2.1、读取图像
+        origin_image = cv2.imread(origin_file)
+        target_image = cv2.imread(target_file)
+
+        q_size = self.ui.Image_Widget.image_label.size()
+        # image_rate = self.ui.Image_Widget.image_rate
+
+        width = q_size.width() 		        # 指定宽度
+
+        (o_h, o_w) = origin_image.shape[:2]	# 获取图像的宽和高
+        o_r = width / float(o_w)			# 计算比例
+        o_dim = (width, int(o_h * o_r))		# 按比例缩放高度: (宽, 高)
+
+        (t_h, t_w) = target_image.shape[:2]	# 获取图像的宽和高
+        t_r = width / float(t_w)			# 计算比例
+        t_dim = (width, int(t_h * t_r))		# 按比例缩放高度: (宽, 高)
+
+        # self.ui.Image_Widget.set_image_scale(o_r)
+        # 2.2、图像缩放
+        origin_image = cv2.resize(origin_image, o_dim, interpolation=cv2.INTER_AREA)
+        target_image = cv2.resize(target_image, t_dim, interpolation=cv2.INTER_AREA)
+        # 2.3、灰度图
+        origin_gray = cv2.cvtColor(origin_image, cv2.COLOR_BGR2GRAY)
+        target_gray = cv2.cvtColor(target_image, cv2.COLOR_BGR2GRAY)
+
+        # （3）人脸检测
+        origin_rects = detector(origin_gray, 1)				# 若有多个目标，则返回多个人脸框
+        target_rects = detector(target_gray, 1)				# 若有多个目标，则返回多个人脸框
+
+        # （4）遍历检测得到的【人脸框 + 关键点】
+        # rect: 人脸框
+        for o_rect, t_rect in zip(origin_rects, target_rects):		
+            # 4.1、定位脸部的关键点（返回的是一个结构体信息，需要遍历提取坐标）
+            o_shape = predictor(origin_gray, o_rect)
+            t_shape = predictor(target_gray, t_rect)
+            # 4.2、遍历shape提取坐标并进行格式转换: ndarray
+            o_shape = utils.shape_to_np(o_shape)
+            t_shape = utils.shape_to_np(t_shape)
+            # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
+            points = []
+            if self.only_one_point:
+                o_x, o_y = o_shape[33]
+                t_x, t_y = t_shape[33]
+                points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+            else:
+                for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
+                    points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                    points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+                
+            self.ui.Image_Widget.add_points(points)
+
+
+    @Slot()
+    def on_SaveExperiment_PushButton_clicked(self):
+        target_file = self.ui.TargetImage_LineEdit.text()
+        target_file = os.path.basename(target_file)
+        target_seed = target_file.split(os.extsep)[0]
+        print(target_seed)
+        target_seed = target_seed.split("_")[1]
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        image_format = "png"
+        filename = f"{pickle}_{self.seed}_{target_seed}.{image_format}"
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        image_dir = os.path.join(base_dir, "save_images", "experiment_images")
+        filename = os.path.join(image_dir, filename)
+        self.save_image(filename, image_format, 100)
+        print(f"save image to {filename}")
+
+    @Slot()
+    def on_TestTimes_LineEdit_editingFinished(self):
+        test_times = int(self.ui.TestTimes_LineEdit.text())
+        if 0 < test_times:
+            self.test_times = test_times
+        print(self.test_times)
+
+    @Slot()
+    def on_DragTimes_LineEdit_editingFinished(self):
+        drag_times = int(self.ui.DragTimes_LineEdit.text())
+        if 0 < drag_times:
+            self.drag_times = drag_times
+        print(self.drag_times)
+
+    @Slot()
+    def on_Experience_PushButton_clicked(self):
+        print("experience")
+        experience_thread = ExperienceThread(self.DragGAN, self.ui.Image_Widget)
+        experience_thread.start()
+
+    @Slot()
+    def on_experience_start(self):
+        if not self.DragGAN.random_seed:
+            self.DragGAN.random_seed = True
+            self.ui.RandomSeed_CheckBox.setChecked(True)
+
+    @Slot(int)
+    def on_random_seed(self, new_seed):
+        if self.DragGAN.random_seed:
+            self.DragGAN.seed = new_seed
+            self.ui.Seed_LineEdit.setText(str(new_seed))
+
+    @Slot()
+    def on_TargetImage_LineEdit_editingFinished(self):
+        print(f"target image line edit: {self.ui.TargetImage_LineEdit.text()}")
+
+    @Slot()
+    def on_TargetImage_ToolButton_clicked(self):
+        print("target image tool button")
+        file = QFileDialog.getOpenFileName(
+            self, "Select Target Files", os.path.realpath("./save_images/generated_images"), "Image files (*.png)")
+        target_image_path = file[0]
+        if not os.path.isfile(target_image_path):
+            return
+        # self.ui.Target_LineEdit.setText(os.path.basename(target_image_path))
+        self.ui.TargetImage_LineEdit.setText(target_image_path)
+
+    @Slot()
+    def on_OnePoint_CheckBox_stateChanged(self):
+        print("one point")
+        if self.ui.OnePoint_CheckBox.isChecked():
+            self.only_one_point = True
+        else:
+            self.only_one_point = False
+
+    @Slot()
+    def on_FivePoints_CheckBox_stateChanged(self):
+        print("five points")
+        if self.ui.FivePoints_CheckBox.isChecked():
+            self.five_points = True
+        else:
+            self.five_points = False
+
+    @Slot()
+    def on_SixtyEightPoints_CheckBox_stateChanged(self):
+        print("sixty eight points")
+        if self.ui.SixtyEightPoints_CheckBox.isChecked():
+            self.sixty_eight_points = True
+        else:
+            self.sixty_eight_points = False
+
+    @Slot()
+    def on_FourBlock_CheckBox_stateChanged(self):
+        print("four block")
+        if self.ui.FourBlock_CheckBox.isChecked():
+            self.fourth_block = True
+        else:
+            self.fourth_block = False
+    
+    @Slot()
+    def on_FiveBlock_CheckBox_stateChanged(self):
+        print("five block")
+        if self.ui.FiveBlock_CheckBox.isChecked():
+            self.fifth_block = True
+        else:
+            self.fifth_block = False
+
+    @Slot()
+    def on_SixBlock_CheckBox_stateChanged(self):
+        print("six block")
+        if self.ui.SixBlock_CheckBox.isChecked():
+            self.sixth_block = True
+        else:
+            self.sixth_block = False
+
+    @Slot()
+    def on_SevenBlock_CheckBox_stateChanged(self):
+        print("seven block")
+        if self.ui.SevenBlock_CheckBox.isChecked():
+            self.seventh_block = True
+        else:
+            self.seventh_block = False
+
+################## mask ##################
+
+    @Slot()
+    def on_FlexibleArea_PushButton_clicked(self):
+        print("flexible area")
+
+    @Slot()
+    def on_FixedArea_PushButton_clicked(self):
+        print("fixed area")
+
+    @Slot()
+    def on_ResetMask_PushButton_clicked(self):
+        print("reset mask")
+
     @Slot()
     def on_Minus4Radius_PushButton_clicked(self):
         self.DragGAN.radius = float(self.ui.Radius_LineEdit.text())
@@ -258,18 +482,6 @@ class MainWindow(ConfigMainWindow):
         if self.DragGAN.lambda_ < self.DragGAN.max_lambda:
             self.DragGAN.lambda_ += 1
             self.ui.Lambda_LineEdit.setText(str(self.DragGAN.lambda_))
-
-    @Slot()
-    def on_FlexibleArea_PushButton_clicked(self):
-        print("flexible area")
-
-    @Slot()
-    def on_FixedArea_PushButton_clicked(self):
-        print("fixed area")
-
-    @Slot()
-    def on_ResetMask_PushButton_clicked(self):
-        print("reset mask")
 
 ################### image ##################
 

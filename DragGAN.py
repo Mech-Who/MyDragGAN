@@ -298,7 +298,7 @@ class DragThread(QThread):
         self.DragGAN = draggan_model
         self.points = points
 
-    def run(self):
+    def drag(self):
         points = self.points
         if len(points) < 2:
             return
@@ -327,21 +327,37 @@ class DragThread(QThread):
                 points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
 
             self.DragGAN.steps += 1
-            self.once_finished(image, points, once_loss, self.DragGAN.steps)
-        self.drag_finished()
+            self.once_finished.emit(image, points, once_loss, self.DragGAN.steps)
+        self.drag_finished.emit()
+
+    def run(self):
+        self.drag()
 
 
 class ExperienceThread(QThread):
+    experience_start = Signal()
+    random_seed = Signal(int)
     experience_finished = Signal()
-    once_finished = Signal(torch.Tensor, np.ndarray, np.ndarray, int)
+    once_finished = Signal(torch.Tensor, list, int, int)
 
-    def __init__(self, draggan_model, points):
+    def __init__(self, draggan_model, image_widget):
         super().__init__()
         self.DragGAN = draggan_model
-        self.points = points
+        self.image_widget = image_widget
 
-    def run(self):
-        points = self.ui.Image_Widget.get_points()
+    def generate(self):
+        import random
+        self.DragGAN.loadCpkt(self.DragGAN.pickle_path)
+
+        if self.DragGAN.random_seed:
+            self.DragGAN.seed = random.randint(self.DragGAN.min_seed, self.DragGAN.max_seed)
+            self.random_seed.emit(self.DragGAN.seed)
+        image = self.DragGAN.generateImage(self.DragGAN.seed, self.DragGAN.w_plus) # 3 * 512 * 512
+        if image is not None:
+            self.image_widget.set_image_from_array(image)
+
+    def drag_once(self, index):
+        points = self.image_widget.get_points()
         if len(points) < 2:
             return
         if len(points) % 2 == 1:
@@ -352,34 +368,160 @@ class ExperienceThread(QThread):
         tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
         self.prepare2Drag(init_pts, lr=self.step_size)
         
-        self.steps = 0
-        result = {"loss": 0, "mean_distance": 0}
-        for i in range(self.drag_times):
-            print(f"current[{index+1}/{self.test_times}] drag times [{i+1}/{self.drag_times}]")
-            if not self.isDragging:
+        self.DragGAN.steps = 0
+        for i in range(self.DragGAN.drag_times):
+            print(f"current[{index+1}/{self.DragGAN.test_times}] drag times [{i+1}/{self.DragGAN.drag_times}]")
+            if not self.DragGAN.isDragging:
                 break
             # 迭代一次
             try:
-                status, ret = self.drag_experience(init_pts, tar_pts, allow_error_px=5, r1=3, r2=13)
+                status, ret = self.DragGAN.drag(init_pts, tar_pts, allow_error_px=5, r1=3, r2=13)
                 if status:
-                    init_pts, _, image, result = ret
+                    init_pts, _, image, once_loss, once_md = ret
                 else:
-                    self.isDragging = False
+                    self.DragGAN.isDragging = False
                     return
             except Exception as e:
                 print(f"Error:{e}")
-                self.isDragging = False
+                self.DragGAN.isDragging = False
                 return
             # 显示最新的图像  
             points = []
             for i in range(init_pts.shape[0]):
                 points.append(QPoint(int(init_pts[i][1]), int(init_pts[i][0])))
                 points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
-            self.ui.Image_Widget.clear_points()
-            self.ui.Image_Widget.add_points(points)
-            self.update_image(image)
 
-            self.steps += 1
-            self.ui.StepNumber_Label.setText(str(self.steps))
-        print(f"current[{index+1}/{self.test_times}] {self.drag_times} times experience: loss: {result['loss']}, mean_distance: {result['mean_distance']}")
-        return result
+            self.DragGAN.steps += 1
+            self.once_finished.emit(image, points, once_loss, self.DragGAN.steps)
+        print(f"current[{index+1}/{self.DragGAN.test_times}] {self.DragGAN.drag_times} times experience: loss: {once_loss}, mean_distance: {once_md}")
+        return (once_loss, once_md)
+
+    def saveImage(self, dir_name, pickle, image_format):
+        image_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save_images", dir_name)
+        path = os.path.join(image_dir, f"{pickle}_{self.seed}.{image_format}")
+        self.image_widget.save_image(path, image_format, 100, is_experience=True)
+        print(f"save target image as {path}")
+        return path
+
+    def experience_once(self):
+        import dlib
+        import cv2
+        import time
+
+        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        image_format = "png"
+
+        sum_results = []
+        total_time = 0
+
+        self.experience_start.emit()
+
+        for i in range(self.DragGAN.test_times):
+            # 生成目标图像
+            self.generate()
+            # 保存图片
+            target_filename = self.saveImage("experience_target", pickle, image_format)
+
+            # 生成源图像
+            self.generate()
+            # 保存图片
+            origin_filename = self.saveImage("experience_origin", pickle, image_format)
+            ###################################################################################################################
+            # 参数设置
+
+            dat_68 = "./landmarks/shape_predictor_68_face_landmarks.dat"
+            dat_5 = "./landmarks/shape_predictor_5_face_landmarks.dat"
+
+            shape_predictor = ""
+            if self.DragGAN.only_one_point:
+                shape_predictor = dat_68
+            if self.DragGAN.five_points:
+                shape_predictor = dat_5
+            if self.DragGAN.sixty_eight_points:
+                shape_predictor = dat_68
+            origin_file = origin_filename
+            target_file = target_filename
+
+            ###################################################################################################################
+            # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
+            detector = dlib.get_frontal_face_detector()			# 1.1、基于dlib的人脸检测器
+            predictor = dlib.shape_predictor(shape_predictor)	# 1.2、基于dlib的关键点定位（68个关键点）
+
+            # （2）图像预处理
+            # 2.1、读取图像
+            origin_image = cv2.imread(origin_file)
+            target_image = cv2.imread(target_file)
+
+            q_size = self.image_widget.size()
+            # image_rate = self.ui.Image_Widget.image_rate
+
+            width = q_size.width() 		        # 指定宽度
+
+            (o_h, o_w) = origin_image.shape[:2]	# 获取图像的宽和高
+            o_r = width / float(o_w)			# 计算比例
+            o_dim = (width, int(o_h * o_r))		# 按比例缩放高度: (宽, 高)
+
+            (t_h, t_w) = target_image.shape[:2]	# 获取图像的宽和高
+            t_r = width / float(t_w)			# 计算比例
+            t_dim = (width, int(t_h * t_r))		# 按比例缩放高度: (宽, 高)
+
+            # self.ui.Image_Widget.set_image_scale(o_r)
+            # 2.2、图像缩放
+            origin_image = cv2.resize(origin_image, o_dim, interpolation=cv2.INTER_AREA)
+            target_image = cv2.resize(target_image, t_dim, interpolation=cv2.INTER_AREA)
+            # 2.3、灰度图
+            origin_gray = cv2.cvtColor(origin_image, cv2.COLOR_BGR2GRAY)
+            target_gray = cv2.cvtColor(target_image, cv2.COLOR_BGR2GRAY)
+
+            # （3）人脸检测
+            origin_rects = detector(origin_gray, 1)				# 若有多个目标，则返回多个人脸框
+            target_rects = detector(target_gray, 1)				# 若有多个目标，则返回多个人脸框
+
+            # （4）遍历检测得到的【人脸框 + 关键点】
+            # rect: 人脸框
+            for o_rect, t_rect in zip(origin_rects, target_rects):		
+                # 4.1、定位脸部的关键点（返回的是一个结构体信息，需要遍历提取坐标）
+                o_shape = predictor(origin_gray, o_rect)
+                t_shape = predictor(target_gray, t_rect)
+                # 4.2、遍历shape提取坐标并进行格式转换: ndarray
+                o_shape = utils.shape_to_np(o_shape)
+                t_shape = utils.shape_to_np(t_shape)
+                # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
+                points = []
+                if self.only_one_point:
+                    o_x, o_y = o_shape[30]
+                    t_x, t_y = t_shape[30]
+                    points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                    points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+                else:
+                    for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
+                        points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                        points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+                self.image_widget.add_points(points)
+
+            if self.DragGAN.isDragging:
+                print("dragging is running!")
+                return
+            self.DragGAN.isDragging = True
+            time_start = time.time()
+            result = self.drag_once(i)
+            time_end = time.time()
+            total_time += (time_end - time_start)/1000000 # s
+            self.DragGAN.isDragging = False
+            if result:
+                sum_results.append(result)
+
+            # 保存图片
+            result_filename = self.saveImage("experience_result", pickle, image_format)
+            # 清空画布
+            self.image_widget.clear_points()
+        if len(sum_results) <= 0:
+            return
+        avg_loss = sum([loss for loss, _ in sum_results])/len(sum_results),
+        avg_md = sum([md for _, md in sum_results])/len(sum_results)
+        avg_time = total_time/self.DragGAN.test_times
+        print(f"Experience is finished!\n avg_result: loss: {avg_loss}, mean_distance: {avg_md}, avg_time: {avg_time}")
+        self.experience_finished.emit()
+    
+    def run(self):
+        self.experience_once()
