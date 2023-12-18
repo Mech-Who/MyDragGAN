@@ -37,12 +37,13 @@ class MainWindow(ConfigMainWindow):
         self.setWindowTitle(self.tr("DragGAN"))
 
         self.DragGAN = DragGAN()
+        self.run_thread = None
 
         #### UI初始化 ####
         self.ui.Device_ComboBox.addItem(self.tr("cpu"))
         self.ui.Device_ComboBox.addItem(self.tr("cuda"))
         self.ui.Device_ComboBox.addItem(self.tr("mps"))
-        self.ui.Device_ComboBox.setCurrentText(self.device)
+        self.ui.Device_ComboBox.setCurrentText(self.DragGAN.device)
         self.ui.Pickle_Label.setText(self.DragGAN.pickle_path)
         self.ui.Seed_LineEdit.setText(str(self.DragGAN.seed))
         self.ui.Seed_LineEdit.setPlaceholderText(f"{self.DragGAN.min_seed} - {self.DragGAN.max_seed}")
@@ -176,13 +177,16 @@ class MainWindow(ConfigMainWindow):
             QMessageBox.warning(self, "Warning", "Dragging is running!", QMessageBox.Ok)
             return
         self.DragGAN.isDragging = True
-        drag_thread = DragThread(self.DragGAN, self.ui.Image_Widget.get_points())
-        drag_thread.start()
+        self.run_thread = DragThread(self.DragGAN, self.ui.Image_Widget.get_points())
+        self.run_thread.once_finished.connect(self.on_once_finished)
+        self.run_thread.drag_finished.connect(lambda: print("********** Drag Finished **********"))
+        self.run_thread.start()
 
     @Slot(torch.Tensor, list, int, int)
-    def on_drag_finished(self, image, points, loss, steps):
+    def on_once_finished(self, image, points, loss, steps):
         self.ui.Image_Widget.clear_points()
         self.ui.Image_Widget.add_points(points)
+        # print(f"pointfs: {self.ui.Image_Widget.get_points()}")
         self.ui.Image_Widget.set_image_from_array(image)
         self.ui.StepNumber_Label.setText(str(steps))
         print(f"step: {steps}, loss: {loss}")
@@ -357,8 +361,11 @@ class MainWindow(ConfigMainWindow):
     @Slot()
     def on_Experience_PushButton_clicked(self):
         print("experience")
-        experience_thread = ExperienceThread(self.DragGAN, self.ui.Image_Widget)
-        experience_thread.start()
+        self.run_thread = ExperienceThread(self.DragGAN, self.ui.Image_Widget)
+        self.run_thread.experience_start.connect(self.on_experience_start)
+        self.run_thread.random_seed.connect(self.on_random_seed)
+        self.run_thread.once_finished.connect(self.on_once_finished)
+        self.run_thread.start()
 
     @Slot()
     def on_experience_start(self):

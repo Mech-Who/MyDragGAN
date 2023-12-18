@@ -247,47 +247,13 @@ class DragGAN:
                                                                mode="bilinear", align_corners=True).detach()
             new_init_pts = self.pointTracking(F_for_point_tracking_resized, init_pts, r2=r2)
         md = mean_distance(new_init_pts.cpu().numpy(), tar_pts.cpu().numpy())
-        print(f"Loss: {loss.item():0.4f}, tar pts: {tar_pts.cpu().numpy()}, new init pts: {new_init_pts.cpu().numpy()}\n")
+        loss = loss.item()
+        print(f"tar pts: {tar_pts.cpu().numpy()}, new init pts: {new_init_pts.cpu().numpy()}, Loss: {loss:0.4f}, Mean distance: {md}\n")
         # print("update init_pts as Point Tracking")
 
-        return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img, loss.item(), md)
+        return True, (new_init_pts.detach().clone().cpu().numpy(), tar_pts.detach().clone().cpu().numpy(), new_img, loss, md)
         # return True, (np.array([0, 0]), np.array([1, 1]), np.array([0, 1]))
 
-    def drag_for(self, index):
-        pass
-
-
-    # def drag_thread(self):
-    #     points = self.ui.Image_Widget.get_points()
-    #     if len(points) % 2 == 1:
-    #         points = points[:-1]
-    #     init_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0])
-    #     tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
-    #     init_pts = np.vstack(init_pts)[:, ::-1].copy()
-    #     tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
-    #     self.prepare2Drag(init_pts, lr=self.step_size)
-        
-    #     self.steps = 0
-    #     while(self.isDragging):
-    #         # 迭代一次
-    #         status, ret = self.drag(init_pts, tar_pts, allow_error_px=5, r1=3, r2=13)
-    #         if status:
-    #             init_pts, _, image, once_loss = ret
-    #         else:
-    #             self.isDragging = False
-    #             return
-    #         # 显示最新的图像  
-    #         points = []
-    #         for i in range(init_pts.shape[0]):
-    #             points.append(QPoint(int(init_pts[i][1]), int(init_pts[i][0])))
-    #         for i in range(tar_pts.shape[0]):
-    #             points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
-    #         self.ui.Image_Widget.clear_points()
-    #         self.ui.Image_Widget.add_points(points)
-    #         self.update_image(image)
-
-    #         self.steps += 1
-    #         self.ui.StepNumber_Label.setText(str(self.steps))
 
 class DragThread(QThread):
     drag_finished = Signal()
@@ -366,7 +332,7 @@ class ExperienceThread(QThread):
         tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
         init_pts = np.vstack(init_pts)[:, ::-1].copy()
         tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
-        self.prepare2Drag(init_pts, lr=self.step_size)
+        self.DragGAN.prepare2Drag(init_pts, lr=self.DragGAN.step_size)
         
         self.DragGAN.steps = 0
         for i in range(self.DragGAN.drag_times):
@@ -398,7 +364,7 @@ class ExperienceThread(QThread):
 
     def saveImage(self, dir_name, pickle, image_format):
         image_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save_images", dir_name)
-        path = os.path.join(image_dir, f"{pickle}_{self.seed}.{image_format}")
+        path = os.path.join(image_dir, f"{pickle}_{self.DragGAN.seed}.{image_format}")
         self.image_widget.save_image(path, image_format, 100, is_experience=True)
         print(f"save target image as {path}")
         return path
@@ -408,7 +374,7 @@ class ExperienceThread(QThread):
         import cv2
         import time
 
-        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        pickle = os.path.basename(self.DragGAN.pickle_path).split(os.extsep)[0]
         image_format = "png"
 
         sum_results = []
@@ -488,7 +454,7 @@ class ExperienceThread(QThread):
                 t_shape = utils.shape_to_np(t_shape)
                 # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
                 points = []
-                if self.only_one_point:
+                if self.DragGAN.only_one_point:
                     o_x, o_y = o_shape[30]
                     t_x, t_y = t_shape[30]
                     points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
