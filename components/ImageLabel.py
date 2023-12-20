@@ -51,6 +51,9 @@ class ImageLabel(QLabel):
     def setImageScale(self, image_scale):
         self.image_scale = image_scale
 
+    def getImageScale(self):
+        return self.image_scale
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.status == LabelStatus.Draw:
             self.points.append(event.position()/self.image_scale)
@@ -63,6 +66,12 @@ class ImageLabel(QLabel):
 
     def get_points(self):
         return self.points
+
+    def set_points(self, points):
+        self.points = []
+        self.points.extend(points)
+        self.update()
+
 
     def add_points(self, points):
         self.points.extend(points)

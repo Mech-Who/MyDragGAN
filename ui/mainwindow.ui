@@ -238,35 +238,42 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0,0,0,0,0,0,0" columnstretch="2,0,0,0,0,0,0">
-       <item row="2" column="3" colspan="4">
-        <widget class="QPushButton" name="Browse_PushButton">
+      <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,0,0,0,0,0,0,0,0,0" columnstretch="2,0,0,0,0,0,0">
+       <item row="8" column="1">
+        <widget class="QPushButton" name="Generate_PushButton">
          <property name="text">
-          <string>Browse...</string>
+          <string>Generate</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
-        <widget class="QPushButton" name="Minus4Seed_PushButton">
-         <property name="minimumSize">
+       <item row="5" column="4">
+        <widget class="QLabel" name="Seed_Label">
+         <property name="text">
+          <string>Seed</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="2">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>75</width>
-           <height>0</height>
+           <width>20</width>
+           <height>40</height>
           </size>
          </property>
+        </spacer>
+       </item>
+       <item row="8" column="2">
+        <widget class="QPushButton" name="SaveReal_PushButton">
          <property name="text">
-          <string>-</string>
+          <string>Save</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1" colspan="2">
-        <widget class="QPushButton" name="Recent_PushButton">
-         <property name="text">
-          <string>Recent...</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="2">
+       <item row="7" column="2">
         <widget class="QCheckBox" name="Wp_CheckBox">
          <property name="text">
           <string>W+</string>
@@ -276,10 +283,20 @@
          </attribute>
         </widget>
        </item>
-       <item row="0" column="1" colspan="6">
-        <widget class="QComboBox" name="Device_ComboBox"/>
+       <item row="6" column="1">
+        <widget class="QCheckBox" name="RandomSeed_CheckBox">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Random Seed</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
-       <item row="5" column="1">
+       <item row="7" column="1">
         <widget class="QCheckBox" name="W_CheckBox">
          <property name="enabled">
           <bool>true</bool>
@@ -295,27 +312,17 @@
          </attribute>
         </widget>
        </item>
-       <item row="6" column="1">
-        <widget class="QPushButton" name="Generate_PushButton">
+       <item row="1" column="0">
+        <widget class="QLabel" name="Pickle_Label">
          <property name="text">
-          <string>Generate</string>
+          <string>Pickle</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="Seed_LineEdit">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
+       <item row="5" column="0">
+        <widget class="QLabel" name="Latent_Label">
          <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1" colspan="6">
-        <widget class="QLineEdit" name="Pickle_LineEdit">
-         <property name="enabled">
-          <bool>false</bool>
+          <string>Latent</string>
          </property>
         </widget>
        </item>
@@ -326,27 +333,7 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="Latent_Label">
-         <property name="text">
-          <string>Latent</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="2">
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="3" column="3">
+       <item row="5" column="3">
         <widget class="QPushButton" name="Plus4Seed_PushButton">
          <property name="minimumSize">
           <size>
@@ -359,37 +346,78 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="Pickle_Label">
+       <item row="5" column="2">
+        <widget class="QPushButton" name="Minus4Seed_PushButton">
+         <property name="minimumSize">
+          <size>
+           <width>75</width>
+           <height>0</height>
+          </size>
+         </property>
          <property name="text">
-          <string>Pickle</string>
+          <string>-</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="4">
-        <widget class="QLabel" name="Seed_Label">
-         <property name="text">
-          <string>Seed</string>
-         </property>
-        </widget>
+       <item row="0" column="1" colspan="6">
+        <widget class="QComboBox" name="Device_ComboBox"/>
        </item>
-       <item row="4" column="1">
-        <widget class="QCheckBox" name="RandomSeed_CheckBox">
+       <item row="5" column="1">
+        <widget class="QLineEdit" name="Seed_LineEdit">
          <property name="enabled">
           <bool>true</bool>
          </property>
          <property name="text">
-          <string>Random Seed</string>
+          <string>0</string>
          </property>
-         <property name="checked">
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="Embedding_Label">
+         <property name="text">
+          <string>Embedding</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="Embedding_LineEdit">
+         <property name="enabled">
           <bool>false</bool>
          </property>
         </widget>
        </item>
-       <item row="6" column="2">
-        <widget class="QPushButton" name="SaveReal_PushButton">
+       <item row="2" column="2">
+        <widget class="QPushButton" name="EmbeddingBrowse_PushButton">
          <property name="text">
-          <string>Save</string>
+          <string>Browse...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QPushButton" name="Reset4StepSize_PushButton_2">
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="Pickle_LineEdit">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="Browse_PushButton">
+         <property name="text">
+          <string>Browse...</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QPushButton" name="Recent_PushButton">
+         <property name="text">
+          <string>Recent...</string>
          </property>
         </widget>
        </item>
@@ -517,90 +545,11 @@
     </item>
     <item row="1" column="0">
      <widget class="QWidget" name="drag" native="true">
-      <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1,1,2,2">
-       <item row="5" column="1" colspan="2">
-        <widget class="QLineEdit" name="R1_LineEdit"/>
-       </item>
-       <item row="8" column="2">
-        <widget class="QLabel" name="StepNumber_Label">
-         <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="4">
-        <widget class="QPushButton" name="Stop_PushButton">
-         <property name="text">
-          <string>Stop</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="4">
-        <widget class="QPushButton" name="Reset4R2_PushButton">
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="3">
-        <widget class="QLabel" name="StepSize_Label">
-         <property name="text">
-          <string>Step Size</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1" colspan="2">
-        <widget class="QLineEdit" name="StepSize_LineEdit"/>
-       </item>
-       <item row="6" column="1" colspan="2">
-        <widget class="QLineEdit" name="R2_LineEdit"/>
-       </item>
-       <item row="8" column="3">
-        <widget class="QPushButton" name="SaveGenerate_PushButton">
-         <property name="text">
-          <string>Save</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1" colspan="3">
-        <widget class="QPushButton" name="Start_PushButton">
-         <property name="text">
-          <string>Start</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="4">
-        <widget class="QPushButton" name="ResetPoint_PushButton">
-         <property name="text">
-          <string>Reset point</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="4">
-        <widget class="QPushButton" name="Reset4R1_PushButton">
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="4">
-        <widget class="QPushButton" name="Reset4StepSize_PushButton">
-         <property name="text">
-          <string>Reset</string>
-         </property>
-        </widget>
-       </item>
+      <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,0,0,0,0">
        <item row="0" column="1" colspan="3">
         <widget class="QPushButton" name="AddPoint_PushButton">
          <property name="text">
           <string>Add point</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="Drag_Label">
-         <property name="text">
-          <string>Drag</string>
          </property>
         </widget>
        </item>
@@ -611,19 +560,8 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="3">
-        <widget class="QLabel" name="R1_Label">
-         <property name="text">
-          <string>R1</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="3">
-        <widget class="QLabel" name="R2_Label">
-         <property name="text">
-          <string>R2</string>
-         </property>
-        </widget>
+       <item row="7" column="1" colspan="2">
+        <widget class="QLineEdit" name="R3_LineEdit"/>
        </item>
        <item row="9" column="2">
         <spacer name="verticalSpacer">
@@ -637,6 +575,120 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="5" column="3">
+        <widget class="QLabel" name="R1_Label">
+         <property name="text">
+          <string>R1</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="4">
+        <widget class="QPushButton" name="Reset4R2_PushButton">
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QPushButton" name="Stop_PushButton">
+         <property name="text">
+          <string>Stop</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="4">
+        <widget class="QPushButton" name="Reset4StepSize_PushButton">
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1" colspan="2">
+        <widget class="QLineEdit" name="R1_LineEdit"/>
+       </item>
+       <item row="6" column="1" colspan="2">
+        <widget class="QLineEdit" name="R2_LineEdit"/>
+       </item>
+       <item row="8" column="2">
+        <widget class="QLabel" name="StepNumber_Label">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="Drag_Label">
+         <property name="text">
+          <string>Drag</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="3">
+        <widget class="QLabel" name="StepSize_Label">
+         <property name="text">
+          <string>Step Size</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="4">
+        <widget class="QCheckBox" name="Optimize_CheckBox">
+         <property name="text">
+          <string>optimize</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="4">
+        <widget class="QPushButton" name="Reset4R3_PushButton">
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="4">
+        <widget class="QPushButton" name="Reset4R1_PushButton">
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1" colspan="2">
+        <widget class="QLineEdit" name="StepSize_LineEdit"/>
+       </item>
+       <item row="1" column="1" colspan="3">
+        <widget class="QPushButton" name="Start_PushButton">
+         <property name="text">
+          <string>Start</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="3">
+        <widget class="QLabel" name="R3_Label">
+         <property name="text">
+          <string>R3</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="4">
+        <widget class="QPushButton" name="ResetPoint_PushButton">
+         <property name="text">
+          <string>Reset point</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="3">
+        <widget class="QPushButton" name="SaveGenerate_PushButton">
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="3">
+        <widget class="QLabel" name="R2_Label">
+         <property name="text">
+          <string>R2</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -666,12 +718,12 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="LatentSpace_ButtonGroup"/>
+  <buttongroup name="Point_ButtonGroup"/>
   <buttongroup name="Block_ButtonGroup">
    <property name="exclusive">
     <bool>true</bool>
    </property>
   </buttongroup>
-  <buttongroup name="Point_ButtonGroup"/>
+  <buttongroup name="LatentSpace_ButtonGroup"/>
  </buttongroups>
 </ui>

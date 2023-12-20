@@ -1,9 +1,9 @@
 import copy
-import datetime
-
-import numpy as np
 import utils
 import os
+
+import cv2
+import numpy as np
 import torch
 import torch.nn.functional as torch_F
 from stylegan2_ada.model import StyleGAN
@@ -16,6 +16,7 @@ class DragGAN:
     DEFAULT_STEP_SIZE = 2e-3
     DEFAULT_R1 = 3
     DEFAULT_R2 = 13
+    DEFAULT_R3 = 20
     def __init__(self):
 
         #### model部分初始化 ####
@@ -25,6 +26,7 @@ class DragGAN:
         self.model = StyleGAN(device=self.device)
 
         self.pickle_path = ""
+        self.w_load = None
         # 设置seed默认值与阈值
         self.seed = 0
         self.min_seed = 0
@@ -45,9 +47,12 @@ class DragGAN:
         # 初始化R1和R2
         self.r1 = self.DEFAULT_R1
         self.r2 = self.DEFAULT_R2
+        self.r3 = self.DEFAULT_R3
         self.steps = 0
         self.isDragging = False
         self.showPoints = False
+
+        self.is_optimize = False
 
         # experience
         self.only_one_point = False
@@ -77,13 +82,13 @@ class DragGAN:
         self.pickle_path = pickle_path
         self.model.load_ckpt(pickle_path)
 
-    def generateImage(self, seed, w_plus=True):
+    def generateImage(self, seed, w_plus=True, w_load=None):
         if self.pickle_path:
             # 将opt设置为None, 表示开始一次新的优化
             self.optimizer = None
 
             # seed -> w -> image(torch.Tensor)
-            self.W = self.model.gen_w(seed, w_plus)
+            self.W = self.model.gen_w(seed, w_plus, w_load)
             img, self.init_F = self.model.gen_img(self.W)
             # 处理图像数据为RGB格式，每一个元素为0~255的数据
             img = img[0]
@@ -109,7 +114,7 @@ class DragGAN:
         self.init_pts_0 = torch.from_numpy(temp_init_pts_0).float().to(self.device)
 
         # 3. 将w向量的部分特征设置为可训练
-        temp_W = self.W.cpu().numpy().copy()
+        temp_W = self.W.cpu().detach().numpy().copy()
         self.W = torch.from_numpy(temp_W).to(self.device).float()
         self.W.requires_grad_(False)
 
@@ -259,19 +264,83 @@ class DragThread(QThread):
     drag_finished = Signal()
     once_finished = Signal(torch.Tensor, list, int, int)
 
-    def __init__(self, draggan_model, points):
+    def __init__(self, draggan_model, image_widget):
         super().__init__()
         self.DragGAN = draggan_model
-        self.points = points
+        self.image_widget = image_widget
 
     def drag(self):
-        points = self.points
+        points = self.image_widget.get_points()
         if len(points) < 2:
             return
         if len(points) % 2 == 1:
             points = points[:-1]
         init_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0])
         tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
+
+        if self.DragGAN.is_optimize:
+            print("get in optimize")
+            img = self.image_widget.get_image()
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            print(f"img shape:{img.shape}")
+            scale = self.image_widget.get_image_scale()
+            new_init_pts = []
+            # 获取输入点
+            for point in init_pts:
+                # 顶点是原图点，图片是未缩放的原图，无需缩放
+                # point = (int(point[0] / scale), int(point[1] / scale))
+
+                left_up_y = int(point[0]-self.DragGAN.r3)
+                left_up_x = int(point[1]-self.DragGAN.r3)
+                right_down_y = int(point[0]+self.DragGAN.r3)
+                right_down_x = int(point[1]+self.DragGAN.r3)
+                crop_img = img[left_up_x:right_down_x, left_up_y:right_down_y]
+                # 边缘检测
+                # crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+                gauss = cv2.GaussianBlur(crop_img,(3,3),0)
+                canny = cv2.Canny(gauss, 50, 150)
+                # 获得截取后的图片中心
+                center = (int(crop_img.shape[0]/2), int(crop_img.shape[1]/2))
+                # 获得边缘点
+                contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                all_points = [point[0] for contour in contours for point in contour ]
+                # 计算边缘点与中心点距离
+                distance = [(point[0] - center[0])**2 + (point[1] - center[1])**2 for point in all_points]
+                # 求距离最小的点的index
+                min_index = distance.index(min(distance))
+                # 找出最小点
+                min_point = all_points[min_index]
+
+                # 更新最小点为init点
+                rate = 0.8 # 更新比率，0~1， 表示不完全更新到轮廓上
+
+                target_point = (left_up_x + int(center[0] + (min_point[0] - center[0]) * rate), left_up_y + int(center[1] + (min_point[1] - center[1]) * rate))
+                # cv2.circle(img, (point[1], point[0]), 1, (0, 0, 255), 4)
+                # cv2.circle(img, (target_point[1], target_point[0]), 1, (0, 255, 0), 4)
+                # target_point = (int(target_point[0] * scale), int(target_point[1] * scale))
+                target_point = (target_point[1], target_point[0])
+                # cv2.imshow("img", img)
+                # cv2.moveWindow("img", 500, 100)
+                # cv2.imshow("canny", canny)
+                # cv2.moveWindow("canny", 100, 100)
+                # cv2.imshow("crop", crop_img)
+                # cv2.moveWindow("crop", 300, 100)
+                # cv2.waitKey(0)
+                new_init_pts.append(target_point)
+
+            new_init_pts = np.array(new_init_pts)
+            print(f"origin points: {init_pts}")
+            print(f"new points: {new_init_pts}")
+            print(f"scale: {scale}")
+            init_pts = new_init_pts
+            # 显示最新的图像  
+            updated_points = []
+            for i in range(init_pts.shape[0]):
+                updated_points.append(QPoint(int(init_pts[i][0]), int(init_pts[i][1])))
+                updated_points.append(QPoint(int(tar_pts[i][0]), int(tar_pts[i][1])))
+            self.image_widget.set_points(updated_points)
+
+    
         init_pts = np.vstack(init_pts)[:, ::-1].copy()
         tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
         self.DragGAN.prepare2Drag(init_pts, lr=self.DragGAN.step_size)
@@ -289,7 +358,6 @@ class DragThread(QThread):
             points = []
             for i in range(init_pts.shape[0]):
                 points.append(QPoint(int(init_pts[i][1]), int(init_pts[i][0])))
-            for i in range(tar_pts.shape[0]):
                 points.append(QPoint(int(tar_pts[i][1]), int(tar_pts[i][0])))
 
             self.DragGAN.steps += 1
@@ -330,6 +398,69 @@ class ExperienceThread(QThread):
             points = points[:-1]
         init_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 0])
         tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
+
+        if self.DragGAN.is_optimize:
+            print("get in experience optimize")
+            img = self.image_widget.get_image()
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            print(f"img shape:{img.shape}")
+            scale = self.image_widget.get_image_scale()
+            new_init_pts = []
+            # 获取输入点
+            for point in init_pts:
+                # 顶点是原图点，图片是未缩放的原图，无需缩放
+                # point = (int(point[0] / scale), int(point[1] / scale))
+
+                left_up_y = int(point[0]-self.DragGAN.r3)
+                left_up_x = int(point[1]-self.DragGAN.r3)
+                right_down_y = int(point[0]+self.DragGAN.r3)
+                right_down_x = int(point[1]+self.DragGAN.r3)
+                crop_img = img[left_up_x:right_down_x, left_up_y:right_down_y]
+                # 边缘检测
+                # crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+                gauss = cv2.GaussianBlur(crop_img,(3,3),0)
+                canny = cv2.Canny(gauss, 50, 150)
+                # 获得截取后的图片中心
+                center = (int(crop_img.shape[0]/2), int(crop_img.shape[1]/2))
+                # 获得边缘点
+                contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                all_points = [point[0] for contour in contours for point in contour ]
+                # 计算边缘点与中心点距离
+                distance = [(point[0] - center[0])**2 + (point[1] - center[1])**2 for point in all_points]
+                # 求距离最小的点的index
+                min_index = distance.index(min(distance))
+                # 找出最小点
+                min_point = all_points[min_index]
+
+                # 更新最小点为init点
+                rate = 0.8 # 更新比率，0~1， 表示不完全更新到轮廓上
+
+                target_point = (left_up_x + int(center[0] + (min_point[0] - center[0]) * rate), left_up_y + int(center[1] + (min_point[1] - center[1]) * rate))
+                # cv2.circle(img, (point[1], point[0]), 1, (0, 0, 255), 4)
+                # cv2.circle(img, (target_point[1], target_point[0]), 1, (0, 255, 0), 4)
+                # target_point = (int(target_point[0] * scale), int(target_point[1] * scale))
+                target_point = (target_point[1], target_point[0])
+                # cv2.imshow("img", img)
+                # cv2.moveWindow("img", 500, 100)
+                # cv2.imshow("canny", canny)
+                # cv2.moveWindow("canny", 100, 100)
+                # cv2.imshow("crop", crop_img)
+                # cv2.moveWindow("crop", 300, 100)
+                # cv2.waitKey(0)
+                new_init_pts.append(target_point)
+                
+            new_init_pts = np.array(new_init_pts)
+            print(f"origin points: {init_pts}")
+            print(f"new points: {new_init_pts}")
+            print(f"scale: {scale}")
+            init_pts = new_init_pts
+            # 显示最新的图像  
+            updated_points = []
+            for i in range(init_pts.shape[0]):
+                updated_points.append(QPoint(int(init_pts[i][0]), int(init_pts[i][1])))
+                updated_points.append(QPoint(int(tar_pts[i][0]), int(tar_pts[i][1])))
+            self.image_widget.set_points(updated_points)
+
         init_pts = np.vstack(init_pts)[:, ::-1].copy()
         tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
         self.DragGAN.prepare2Drag(init_pts, lr=self.DragGAN.step_size)

@@ -21,6 +21,7 @@ class ImageWidget(QWidget):
         self.image_label.installEventFilter(self)
         self.image_rate = None
         self.last_pos = None
+        self.array_img = None
         self.pixmap = QPixmap()
 
         self.painter = QPainter()
@@ -39,13 +40,18 @@ class ImageWidget(QWidget):
 
     def set_image_from_array(self, image, base_size=512):
         self.BASE_SIZE = base_size
-        img = image.cpu().numpy()
-        img = Image.fromarray(img)
+        self.array_img = image.cpu().numpy()
+        img = Image.fromarray(self.array_img)
         self.pixmap = img.toqpixmap()
         pix_map = self.pixmap
         self.image_rate = pix_map.width() / pix_map.height()
         self.image_label.setPixmap(pix_map)
         self.compute_size()
+
+    def get_image(self):
+        if self.array_img is not None:
+            return self.array_img
+        return None
 
     def compute_size(self):
         if self.image_rate is not None:
@@ -99,6 +105,9 @@ class ImageWidget(QWidget):
         else:
             QMessageBox.critical(self, "Error", "No image loaded!")
 
+    def get_image_scale(self):
+        return self.image_label.getImageScale()
+
     def set_image_scale(self, image_scale):
         self.image_label.setImageScale(image_scale)
 
@@ -107,6 +116,9 @@ class ImageWidget(QWidget):
 
     def get_points(self):
         return self.image_label.get_points()
+
+    def set_points(self, points):
+        self.image_label.set_points(points)
 
     def add_points(self, points):
         self.image_label.add_points(points)

@@ -55,9 +55,11 @@ class MainWindow(ConfigMainWindow):
         self.ui.StepSize_LineEdit.setText(str(self.DragGAN.step_size))
         self.ui.R1_LineEdit.setText(str(self.DragGAN.r1))
         self.ui.R2_LineEdit.setText(str(self.DragGAN.r2))
+        self.ui.R3_LineEdit.setText(str(self.DragGAN.r3))
         self.ui.StepNumber_Label.setText(str(self.DragGAN.steps))
         self.ui.TestTimes_LineEdit.setText(str(self.DragGAN.test_times))
         self.ui.DragTimes_LineEdit.setText(str(self.DragGAN.drag_times))
+        self.ui.Optimize_CheckBox.setChecked(self.DragGAN.is_optimize)
 
 
 ################### model ##################
@@ -83,6 +85,23 @@ class MainWindow(ConfigMainWindow):
         self.DragGAN.pickle_path = pickle_path
         self.ui.Pickle_LineEdit.setText(os.path.basename(pickle_path))
         self.addConfig("last_pickle", pickle_path)
+
+    @Slot()
+    def on_EmbeddingBrowse_PushButton_clicked(self):
+        file = QFileDialog.getOpenFileName(
+            self, "Select Embedding Files", os.path.realpath("./checkpoints/PTI"), "Embedding Files (*.pt)")
+        embedding_path = file[0]
+        if not os.path.isfile(embedding_path):
+            return
+        self.DragGAN.w_load = torch.load(embedding_path)
+        self.DragGAN.embedding_path = embedding_path
+        self.ui.Embedding_LineEdit.setText(os.path.basename(embedding_path))
+
+    @Slot()
+    def on_EmbeddingReset_PushButton_clicked(self):
+        self.DragGAN.w_load = None
+        self.DragGAN.embedding_path = None
+        self.ui.Embedding_LineEdit.setText("")
 
     @Slot()
     def on_Seed_LineEdit_textChanged(self):
@@ -144,7 +163,10 @@ class MainWindow(ConfigMainWindow):
         if self.DragGAN.random_seed:
             self.DragGAN.seed = random.randint(self.DragGAN.min_seed, self.DragGAN.max_seed)
             self.ui.Seed_LineEdit.setText(str(self.DragGAN.seed))
-        image = self.DragGAN.generateImage(self.DragGAN.seed, self.DragGAN.w_plus) # 3 * 512 * 512
+        if self.DragGAN.w_load is not None:
+            image = self.DragGAN.generateImage(self.DragGAN.seed, self.DragGAN.w_plus, self.DragGAN.w_load) # 3 * 512 * 512
+        else:
+            image = self.DragGAN.generateImage(self.DragGAN.seed, self.DragGAN.w_plus) # 3 * 512 * 512
         if image is not None:
             self.ui.Image_Widget.set_image_from_array(image)
 
@@ -177,7 +199,7 @@ class MainWindow(ConfigMainWindow):
             QMessageBox.warning(self, "Warning", "Dragging is running!", QMessageBox.Ok)
             return
         self.DragGAN.isDragging = True
-        self.run_thread = DragThread(self.DragGAN, self.ui.Image_Widget.get_points())
+        self.run_thread = DragThread(self.DragGAN, self.ui.Image_Widget)
         self.run_thread.once_finished.connect(self.on_once_finished)
         self.run_thread.drag_finished.connect(lambda: print("********** Drag Finished **********"))
         self.run_thread.start()
@@ -227,6 +249,16 @@ class MainWindow(ConfigMainWindow):
         self.ui.R2_LineEdit.setText(str(self.DragGAN.r2))
 
     @Slot()
+    def on_R3_LineEdit_editingFinished(self):
+        self.DragGAN.r3 = float(self.ui.R3_LineEdit.text())
+        print(f"current r3: {self.DragGAN.r3}")
+
+    @Slot()
+    def on_Reset4R3_PushButton_clicked(self):
+        self.DragGAN.r3 = self.DragGAN.DEFAULT_R3
+        self.ui.R3_LineEdit.setText(str(self.DragGAN.r3))
+
+    @Slot()
     def on_SaveGenerate_PushButton_clicked(self):
         pickle = os.path.basename(self.DragGAN.pickle_path).split(os.extsep)[0]
         image_format = "png"
@@ -235,6 +267,16 @@ class MainWindow(ConfigMainWindow):
         # self.save_image(image_dir+filename, image_format, 100)
         filename = os.path.join(image_dir, filename)
         self.ui.Image_Widget.save_image(filename, image_format, 100)
+
+    @Slot()
+    def on_Optimize_CheckBox_stateChanged(self):
+        if self.ui.Optimize_CheckBox.isChecked():
+            self.DragGAN.is_optimize = True
+            print(f"optimize: {self.DragGAN.is_optimize}")
+        else:
+            self.DragGAN.is_optimize = False
+            print(f"optimize: {self.DragGAN.is_optimize}")
+################## model ##################
 
 ################## experiment ##################
 
@@ -245,7 +287,7 @@ class MainWindow(ConfigMainWindow):
         import cv2
 
         # 保存图片
-        pickle = os.path.basename(self.pickle_path).split(os.extsep)[0]
+        pickle = os.path.basename(self.DragGAN.pickle_path).split(os.extsep)[0]
         image_format = "png"
         filename = f"{pickle}_{self.DragGAN.seed}.{image_format}"
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -260,11 +302,11 @@ class MainWindow(ConfigMainWindow):
         dat_5 = "./landmarks/shape_predictor_5_face_landmarks.dat"
 
         shape_predictor = ""
-        if self.only_one_point:
+        if self.DragGAN.only_one_point:
             shape_predictor = dat_68
-        if self.five_points:
+        if self.DragGAN.five_points:
             shape_predictor = dat_5
-        if self.sixty_eight_points:
+        if self.DragGAN.sixty_eight_points:
             shape_predictor = dat_68
         origin_file = filename
         target_file = self.ui.TargetImage_LineEdit.text()
