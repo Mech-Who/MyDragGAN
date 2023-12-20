@@ -34,15 +34,18 @@ class StyleGAN(object):
                 module.register_forward_hook(hook)
 
     # 根据seed生成w向量
-    def gen_w(self, seed, w_plus=True):
-        # 随机Latent
-        z = torch.from_numpy(np.random.RandomState(seed).randn(1, self.G.z_dim)).to(torch.float32).to(self.device)
-        W = self.G.mapping(
-            z,
-            None,
-            truncation_psi=self.trunc,
-            truncation_cutoff=None,
-        )
+    def gen_w(self, seed, w_plus=True, w_load=None):
+        if w_load is not None:
+            W = w_load.clone().to(self.device)
+        else:
+            # 随机Latent
+            z = torch.from_numpy(np.random.RandomState(seed).randn(1, self.G.z_dim)).to(torch.float32).to(self.device)
+            W = self.G.mapping(
+                z,
+                None,
+                truncation_psi=self.trunc,
+                truncation_cutoff=None,
+            )
         self.w0 = W
         if w_plus:
             return W
