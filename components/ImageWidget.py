@@ -100,8 +100,12 @@ class ImageWidget(QWidget):
                     print(f"Image Saved as {short_name} successfully!")
                 else:
                     QMessageBox.information(self, "Save Image", f"Image saved as {short_name} successfully!")
+            elif is_experience:
+                print(f"Save image as {short_name} failed!")
             else:
                 QMessageBox.critical(self, "Error", f"Save image as {short_name} failed!")
+        elif is_experience:
+            print("No image loaded!")
         else:
             QMessageBox.critical(self, "Error", "No image loaded!")
 

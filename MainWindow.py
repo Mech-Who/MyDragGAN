@@ -204,7 +204,7 @@ class MainWindow(ConfigMainWindow):
         self.run_thread.drag_finished.connect(lambda: print("********** Drag Finished **********"))
         self.run_thread.start()
 
-    @Slot(torch.Tensor, list, int, int)
+    @Slot(torch.Tensor, list, float, int)
     def on_once_finished(self, image, points, loss, steps):
         self.ui.Image_Widget.clear_points()
         self.ui.Image_Widget.add_points(points)

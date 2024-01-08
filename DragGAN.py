@@ -16,7 +16,7 @@ class DragGAN:
     DEFAULT_STEP_SIZE = 2e-3
     DEFAULT_R1 = 3
     DEFAULT_R2 = 13
-    DEFAULT_R3 = 20
+    DEFAULT_R3 = 40
     def __init__(self):
 
         #### model部分初始化 ####
@@ -118,8 +118,18 @@ class DragGAN:
         self.W = torch.from_numpy(temp_W).to(self.device).float()
         self.W.requires_grad_(False)
 
-        self.W_layers_to_optimize = self.W[:, :6, :].detach().clone().requires_grad_(True)
-        self.W_layers_to_fixed = self.W[:, 6:, :].detach().clone().requires_grad_(False)
+        layer = 6
+        if self.fourth_block:
+            layer = 4
+        elif self.fifth_block:
+            layer = 5
+        elif self.sixth_block:
+            layer = 6
+        elif self.seventh_block:
+            layer = 7
+
+        self.W_layers_to_optimize = self.W[:, :layer, :].detach().clone().requires_grad_(True)
+        self.W_layers_to_fixed = self.W[:, layer:, :].detach().clone().requires_grad_(False)
 
         # 4. 初始化优化器
         self.optimizer = torch.optim.Adam([self.W_layers_to_optimize], lr=lr)
@@ -217,7 +227,7 @@ class DragGAN:
 
         # 如果起始点和目标点之间的像素误差足够小，则停止
         if torch.allclose(init_pts, tar_pts, atol=allow_error_px):
-            return False, (None, None)
+            return False, (0, mean_distance(init_pts.cpu().numpy(), tar_pts.cpu().numpy()))
         self.optimizer.zero_grad()
 
         # 将latent的0:6设置成可训练,6:设置成不可训练 See Sec3.2
@@ -262,7 +272,7 @@ class DragGAN:
 
 class DragThread(QThread):
     drag_finished = Signal()
-    once_finished = Signal(torch.Tensor, list, int, int)
+    once_finished = Signal(torch.Tensor, list, float, int)
 
     def __init__(self, draggan_model, image_widget):
         super().__init__()
@@ -372,7 +382,7 @@ class ExperienceThread(QThread):
     experience_start = Signal()
     random_seed = Signal(int)
     experience_finished = Signal()
-    once_finished = Signal(torch.Tensor, list, int, int)
+    once_finished = Signal(torch.Tensor, list, float, int)
 
     def __init__(self, draggan_model, image_widget):
         super().__init__()
@@ -400,66 +410,60 @@ class ExperienceThread(QThread):
         tar_pts = np.array([[point.x(), point.y()] for index, point in enumerate(points) if index % 2 == 1])
 
         if self.DragGAN.is_optimize:
-            print("get in experience optimize")
-            img = self.image_widget.get_image()
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            print(f"img shape:{img.shape}")
-            scale = self.image_widget.get_image_scale()
-            new_init_pts = []
-            # 获取输入点
-            for point in init_pts:
-                # 顶点是原图点，图片是未缩放的原图，无需缩放
-                # point = (int(point[0] / scale), int(point[1] / scale))
+            try:
+                print("get in experience optimize")
+                img = self.image_widget.get_image()
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                print(f"img shape:{img.shape}")
+                scale = self.image_widget.get_image_scale()
+                new_init_pts = []
+                # 获取输入点
+                for point in init_pts:
+                    # 顶点是原图点，图片是未缩放的原图，无需缩放
+                    # point = (int(point[0] / scale), int(point[1] / scale))
 
-                left_up_y = int(point[0]-self.DragGAN.r3)
-                left_up_x = int(point[1]-self.DragGAN.r3)
-                right_down_y = int(point[0]+self.DragGAN.r3)
-                right_down_x = int(point[1]+self.DragGAN.r3)
-                crop_img = img[left_up_x:right_down_x, left_up_y:right_down_y]
-                # 边缘检测
-                # crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
-                gauss = cv2.GaussianBlur(crop_img,(3,3),0)
-                canny = cv2.Canny(gauss, 50, 150)
-                # 获得截取后的图片中心
-                center = (int(crop_img.shape[0]/2), int(crop_img.shape[1]/2))
-                # 获得边缘点
-                contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                all_points = [point[0] for contour in contours for point in contour ]
-                # 计算边缘点与中心点距离
-                distance = [(point[0] - center[0])**2 + (point[1] - center[1])**2 for point in all_points]
-                # 求距离最小的点的index
-                min_index = distance.index(min(distance))
-                # 找出最小点
-                min_point = all_points[min_index]
+                    left_up_y = int(point[0]-self.DragGAN.r3)
+                    left_up_x = int(point[1]-self.DragGAN.r3)
+                    right_down_y = int(point[0]+self.DragGAN.r3)
+                    right_down_x = int(point[1]+self.DragGAN.r3)
+                    crop_img = img[left_up_x:right_down_x, left_up_y:right_down_y]
+                    # 边缘检测
+                    # crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+                    gauss = cv2.GaussianBlur(crop_img,(3,3),0)
+                    canny = cv2.Canny(gauss, 50, 150)
+                    # 获得截取后的图片中心
+                    center = (int(crop_img.shape[0]/2), int(crop_img.shape[1]/2))
+                    # 获得边缘点
+                    contours, hierarchy = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                    if len(contours) == 0:
+                        new_init_pts.append(point)
+                        continue
+                    all_points = [point[0] for contour in contours for point in contour ]
+                    # 计算边缘点与中心点距离
+                    distance = [(point[0] - center[0])**2 + (point[1] - center[1])**2 for point in all_points]
+                    # 求距离最小的点的index
+                    min_index = distance.index(min(distance))
+                    # 找出最小点
+                    min_point = all_points[min_index]
 
-                # 更新最小点为init点
-                rate = 0.8 # 更新比率，0~1， 表示不完全更新到轮廓上
-
-                target_point = (left_up_x + int(center[0] + (min_point[0] - center[0]) * rate), left_up_y + int(center[1] + (min_point[1] - center[1]) * rate))
-                # cv2.circle(img, (point[1], point[0]), 1, (0, 0, 255), 4)
-                # cv2.circle(img, (target_point[1], target_point[0]), 1, (0, 255, 0), 4)
-                # target_point = (int(target_point[0] * scale), int(target_point[1] * scale))
-                target_point = (target_point[1], target_point[0])
-                # cv2.imshow("img", img)
-                # cv2.moveWindow("img", 500, 100)
-                # cv2.imshow("canny", canny)
-                # cv2.moveWindow("canny", 100, 100)
-                # cv2.imshow("crop", crop_img)
-                # cv2.moveWindow("crop", 300, 100)
-                # cv2.waitKey(0)
-                new_init_pts.append(target_point)
-                
-            new_init_pts = np.array(new_init_pts)
-            print(f"origin points: {init_pts}")
-            print(f"new points: {new_init_pts}")
-            print(f"scale: {scale}")
-            init_pts = new_init_pts
-            # 显示最新的图像  
-            updated_points = []
-            for i in range(init_pts.shape[0]):
-                updated_points.append(QPoint(int(init_pts[i][0]), int(init_pts[i][1])))
-                updated_points.append(QPoint(int(tar_pts[i][0]), int(tar_pts[i][1])))
-            self.image_widget.set_points(updated_points)
+                    # 更新最小点为init点
+                    rate = 0.8 # 更新比率，0~1， 表示不完全更新到轮廓上
+                    target_point = (left_up_x + int(center[0] + (min_point[0] - center[0]) * rate), left_up_y + int(center[1] + (min_point[1] - center[1]) * rate))
+                    target_point = (target_point[1], target_point[0])
+                    new_init_pts.append(target_point)
+                new_init_pts = np.array(new_init_pts)
+                print(f"origin points: {init_pts}")
+                print(f"new points: {new_init_pts}")
+                print(f"scale: {scale}")
+                init_pts = new_init_pts
+                # 显示最新的图像  
+                updated_points = []
+                for i in range(init_pts.shape[0]):
+                    updated_points.append(QPoint(int(init_pts[i][0]), int(init_pts[i][1])))
+                    updated_points.append(QPoint(int(tar_pts[i][0]), int(tar_pts[i][1])))
+                self.image_widget.set_points(updated_points)
+            except Exception as e:
+                print(f"Error:{e}")
 
         init_pts = np.vstack(init_pts)[:, ::-1].copy()
         tar_pts = np.vstack(tar_pts)[:, ::-1].copy()
@@ -477,11 +481,12 @@ class ExperienceThread(QThread):
                     init_pts, _, image, once_loss, once_md = ret
                 else:
                     self.DragGAN.isDragging = False
-                    return
+                    loss, md = ret
+                    return (loss, md)
             except Exception as e:
                 print(f"Error:{e}")
                 self.DragGAN.isDragging = False
-                return
+                return None
             # 显示最新的图像  
             points = []
             for i in range(init_pts.shape[0]):
@@ -495,55 +500,69 @@ class ExperienceThread(QThread):
 
     def saveImage(self, dir_name, pickle, image_format):
         image_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save_images", dir_name)
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
         path = os.path.join(image_dir, f"{pickle}_{self.DragGAN.seed}.{image_format}")
         self.image_widget.save_image(path, image_format, 100, is_experience=True)
         print(f"save target image as {path}")
         return path
 
-    def experience_once(self):
-        import dlib
-        import cv2
-        import time
+    def get_experience_dir(self):
+        optimize = None
+        if self.DragGAN.is_optimize:
+            optimize = "optimize"
+        else:
+            optimize = "not_optimize"
 
-        pickle = os.path.basename(self.DragGAN.pickle_path).split(os.extsep)[0]
-        image_format = "png"
+        num_points = None
+        if self.DragGAN.only_one_point:
+            num_points = "one_point"
+        elif self.DragGAN.five_points:
+            num_points = "five_point"
+        elif self.DragGAN.sixty_eight_points:
+            num_points = "sixty_eight_point"
 
-        sum_results = []
-        total_time = 0
+        r1 = str(self.DragGAN.r1)
+        r2 = str(self.DragGAN.r2)
+        r3 = str(self.DragGAN.r3)
 
-        self.experience_start.emit()
+        block = None
+        if self.DragGAN.fourth_block:
+            block = "fourth_block"
+        elif self.DragGAN.fifth_block:
+            block = "fifth_block"
+        elif self.DragGAN.sixth_block:
+            block = "sixth_block"
+        elif self.DragGAN.seventh_block:
+            block = "seventh_block"
+        
+        pickle_name = os.path.basename(self.DragGAN.pickle_path)
+        if pickle_name == "stylegan2_dogs_1024_pytorch.pkl":
+            pickle_name = "dogs_1024"
+        elif pickle_name == "stylegan2_elephants_512_pytorch.pkl":
+            pickle_name = "elephants_512"
+        elif pickle_name == "stylegan2_horses_256_pytorch.pkl":
+            pickle_name = "horses_256"
+        elif pickle_name == "stylegan2_lions_512_pytorch.pkl":
+            pickle_name = "lions_512"
+        elif pickle_name == "stylegan2-afhqcat-512x512.pkl":
+            pickle_name = "afhqcat_512"
+        elif pickle_name == "stylegan2-ffhq-512x512.pkl":
+            pickle_name = "ffhq_512"
+        else:
+            pickle_name = "other"
 
-        for i in range(self.DragGAN.test_times):
-            # 生成目标图像
-            self.generate()
-            # 保存图片
-            target_filename = self.saveImage("experience_target", pickle, image_format)
+        experience_dir = os.path.join(pickle_name, optimize, num_points, r1, r2, r3, block)
+        print(f"experience_dir: {experience_dir}")
+        return experience_dir
 
-            # 生成源图像
-            self.generate()
-            # 保存图片
-            origin_filename = self.saveImage("experience_origin", pickle, image_format)
-            ###################################################################################################################
-            # 参数设置
-
-            dat_68 = "./landmarks/shape_predictor_68_face_landmarks.dat"
-            dat_5 = "./landmarks/shape_predictor_5_face_landmarks.dat"
-
-            shape_predictor = ""
-            if self.DragGAN.only_one_point:
-                shape_predictor = dat_68
-            if self.DragGAN.five_points:
-                shape_predictor = dat_5
-            if self.DragGAN.sixty_eight_points:
-                shape_predictor = dat_68
-            origin_file = origin_filename
-            target_file = target_filename
-
+    def face_detection(self, origin_file, target_file, shape_predictor):
+            import dlib
+            import cv2
             ###################################################################################################################
             # （1）先检测人脸，然后定位脸部的关键点。优点: 与直接在图像中定位关键点相比，准确度更高。
             detector = dlib.get_frontal_face_detector()			# 1.1、基于dlib的人脸检测器
             predictor = dlib.shape_predictor(shape_predictor)	# 1.2、基于dlib的关键点定位（68个关键点）
-
             # （2）图像预处理
             # 2.1、读取图像
             origin_image = cv2.imread(origin_file)
@@ -573,46 +592,107 @@ class ExperienceThread(QThread):
             # （3）人脸检测
             origin_rects = detector(origin_gray, 1)				# 若有多个目标，则返回多个人脸框
             target_rects = detector(target_gray, 1)				# 若有多个目标，则返回多个人脸框
+            
+            return (origin_rects, target_rects, origin_gray, target_gray, o_r, t_r, predictor)
 
-            # （4）遍历检测得到的【人脸框 + 关键点】
-            # rect: 人脸框
-            for o_rect, t_rect in zip(origin_rects, target_rects):		
-                # 4.1、定位脸部的关键点（返回的是一个结构体信息，需要遍历提取坐标）
-                o_shape = predictor(origin_gray, o_rect)
-                t_shape = predictor(target_gray, t_rect)
-                # 4.2、遍历shape提取坐标并进行格式转换: ndarray
-                o_shape = utils.shape_to_np(o_shape)
-                t_shape = utils.shape_to_np(t_shape)
-                # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
-                points = []
-                if self.DragGAN.only_one_point:
-                    o_x, o_y = o_shape[30]
-                    t_x, t_y = t_shape[30]
+    def get_shape_predictor(self):
+        dat_68 = "./landmarks/shape_predictor_68_face_landmarks.dat"
+        dat_5 = "./landmarks/shape_predictor_5_face_landmarks.dat"
+
+        shape_predictor = ""
+        if self.DragGAN.only_one_point:
+            shape_predictor = dat_5
+        if self.DragGAN.five_points:
+            shape_predictor = dat_5
+        if self.DragGAN.sixty_eight_points:
+            shape_predictor = dat_68
+        
+        return shape_predictor
+
+    def get_generated_images(self, experience_dir, pickle, image_format):
+        # 生成目标图像
+        self.generate()
+        # 保存图片
+        target_filename = self.saveImage(f"experience_target/{experience_dir}", pickle, image_format)
+
+        # 生成源图像
+        self.generate()
+        # 保存图片
+        origin_filename = self.saveImage(f"experience_origin/{experience_dir}", pickle, image_format)
+
+        return (origin_filename, target_filename)
+
+    def get_input_points(self, origin_rects, target_rects, origin_gray, target_gray, o_r, t_r, predictor):
+        # （4）遍历检测得到的【人脸框 + 关键点】
+        # rect: 人脸框
+        for o_rect, t_rect in zip(origin_rects, target_rects):		
+            # 4.1、定位脸部的关键点（返回的是一个结构体信息，需要遍历提取坐标）
+            o_shape = predictor(origin_gray, o_rect)
+            t_shape = predictor(target_gray, t_rect)
+            # 4.2、遍历shape提取坐标并进行格式转换: ndarray
+            o_shape = utils.shape_to_np(o_shape)
+            t_shape = utils.shape_to_np(t_shape)
+            # 4.3、根据脸部位置获得点（每个脸部由多个关键点组成）
+            points = []
+            if self.DragGAN.only_one_point:
+                o_x, o_y = o_shape[4]
+                t_x, t_y = t_shape[4]
+                points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
+                points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
+            else:
+                for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
                     points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
                     points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
-                else:
-                    for (o_x, o_y), (t_x, t_y) in zip(o_shape, t_shape):
-                        points.append(QPoint(int(o_x/o_r), int(o_y/o_r)))
-                        points.append(QPoint(int(t_x/t_r), int(t_y/t_r)))
-                self.image_widget.add_points(points)
+            self.image_widget.add_points(points)
+
+    def experience_once(self):
+        
+        import time
+
+        pickle = os.path.basename(self.DragGAN.pickle_path).split(os.extsep)[0]
+        image_format = "png"
+
+        sum_results = []
+        total_time = 0
+
+        self.experience_start.emit()
+
+        experience_dir = self.get_experience_dir()
+        
+        result = None
+
+        for i in range(self.DragGAN.test_times):
+
+            origin_filename, target_filename = self.get_generated_images(experience_dir, pickle, image_format)
+
+            # 参数设置
+            shape_predictor = self.get_shape_predictor()
+            origin_file = origin_filename
+            target_file = target_filename
+            ret = self.face_detection(origin_file, target_file, shape_predictor)
+
+            self.get_input_points(*ret)
 
             if self.DragGAN.isDragging:
                 print("dragging is running!")
-                return
+                break
             self.DragGAN.isDragging = True
             time_start = time.time()
-            result = self.drag_once(i)
+            res = self.drag_once(i)
+            if res is not None:
+                result = res
+            if result is not None:
+                sum_results.append(result)
             time_end = time.time()
             total_time += (time_end - time_start)/1000000 # s
             self.DragGAN.isDragging = False
-            if result:
-                sum_results.append(result)
 
             # 保存图片
-            result_filename = self.saveImage("experience_result", pickle, image_format)
+            result_filename = self.saveImage(f"experience_result/{experience_dir}", pickle, image_format)
             # 清空画布
             self.image_widget.clear_points()
         if len(sum_results) <= 0:
+            print("sum_results is empty!")
             return
         avg_loss = sum([loss for loss, _ in sum_results])/len(sum_results),
         avg_md = sum([md for _, md in sum_results])/len(sum_results)

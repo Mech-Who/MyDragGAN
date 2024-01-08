@@ -12,6 +12,7 @@ class StyleGAN(object):
         self.device = device
         self.G = None
         self.trunc = trunc
+        self.w0 = None
 
     # Modified from https://github.com/skimai/DragGAN/blob/main/draggan.py
     # 这里实现模型的加载以及添加hook(为了导出中间层特征)

@@ -34,7 +34,7 @@ if __name__ == "__main__":
     import torchvision.transforms as transforms
     import torchvision.models as models
 
-    device = 'cpu'
+    device = 'cuda'
 
     # 创建Inception网络模型
     inception_model = models.inception_v3(pretrained=True, transform_input=True).to(device)
