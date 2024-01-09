@@ -295,84 +295,6 @@ class Ui_DragGAN(object):
 
         self.gridLayout.addWidget(self.model, 0, 0, 1, 1)
 
-        self.mask = QWidget(self.centralwidget)
-        self.mask.setObjectName(u"mask")
-        self.gridLayout_4 = QGridLayout(self.mask)
-        self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.Plus4Radius_PushButton = QPushButton(self.mask)
-        self.Plus4Radius_PushButton.setObjectName(u"Plus4Radius_PushButton")
-
-        self.gridLayout_4.addWidget(self.Plus4Radius_PushButton, 2, 3, 1, 1)
-
-        self.Minus4Lambda_PushButton = QPushButton(self.mask)
-        self.Minus4Lambda_PushButton.setObjectName(u"Minus4Lambda_PushButton")
-
-        self.gridLayout_4.addWidget(self.Minus4Lambda_PushButton, 3, 2, 1, 1)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-
-        self.gridLayout_4.addItem(self.verticalSpacer_2, 4, 2, 1, 1)
-
-        self.Lambda_LineEdit = QLineEdit(self.mask)
-        self.Lambda_LineEdit.setObjectName(u"Lambda_LineEdit")
-        self.Lambda_LineEdit.setEnabled(False)
-
-        self.gridLayout_4.addWidget(self.Lambda_LineEdit, 3, 1, 1, 1)
-
-        self.ShowMask_CheckBox = QCheckBox(self.mask)
-        self.ShowMask_CheckBox.setObjectName(u"ShowMask_CheckBox")
-
-        self.gridLayout_4.addWidget(self.ShowMask_CheckBox, 1, 3, 1, 2)
-
-        self.ResetMask_PushButton = QPushButton(self.mask)
-        self.ResetMask_PushButton.setObjectName(u"ResetMask_PushButton")
-
-        self.gridLayout_4.addWidget(self.ResetMask_PushButton, 1, 1, 1, 2)
-
-        self.Mask_Label = QLabel(self.mask)
-        self.Mask_Label.setObjectName(u"Mask_Label")
-
-        self.gridLayout_4.addWidget(self.Mask_Label, 0, 0, 1, 1)
-
-        self.Lambda_Label = QLabel(self.mask)
-        self.Lambda_Label.setObjectName(u"Lambda_Label")
-
-        self.gridLayout_4.addWidget(self.Lambda_Label, 3, 4, 1, 1)
-
-        self.Radius_Label = QLabel(self.mask)
-        self.Radius_Label.setObjectName(u"Radius_Label")
-
-        self.gridLayout_4.addWidget(self.Radius_Label, 2, 4, 1, 1)
-
-        self.Radius_LineEdit = QLineEdit(self.mask)
-        self.Radius_LineEdit.setObjectName(u"Radius_LineEdit")
-        self.Radius_LineEdit.setEnabled(False)
-
-        self.gridLayout_4.addWidget(self.Radius_LineEdit, 2, 1, 1, 1)
-
-        self.FlexibleArea_PushButton = QPushButton(self.mask)
-        self.FlexibleArea_PushButton.setObjectName(u"FlexibleArea_PushButton")
-
-        self.gridLayout_4.addWidget(self.FlexibleArea_PushButton, 0, 1, 1, 2)
-
-        self.Minus4Radius_PushButton = QPushButton(self.mask)
-        self.Minus4Radius_PushButton.setObjectName(u"Minus4Radius_PushButton")
-
-        self.gridLayout_4.addWidget(self.Minus4Radius_PushButton, 2, 2, 1, 1)
-
-        self.Plus4Lambda_PushButton = QPushButton(self.mask)
-        self.Plus4Lambda_PushButton.setObjectName(u"Plus4Lambda_PushButton")
-
-        self.gridLayout_4.addWidget(self.Plus4Lambda_PushButton, 3, 3, 1, 1)
-
-        self.FixedArea_PushButton = QPushButton(self.mask)
-        self.FixedArea_PushButton.setObjectName(u"FixedArea_PushButton")
-
-        self.gridLayout_4.addWidget(self.FixedArea_PushButton, 0, 3, 1, 2)
-
-
-        self.gridLayout.addWidget(self.mask, 4, 0, 1, 1)
-
         self.Image_Widget = ImageWidget(self.centralwidget)
         self.Image_Widget.setObjectName(u"Image_Widget")
 
@@ -549,19 +471,6 @@ class Ui_DragGAN(object):
         self.Reset4StepSize_PushButton_2.setText(QCoreApplication.translate("DragGAN", u"Reset", None))
         self.Browse_PushButton.setText(QCoreApplication.translate("DragGAN", u"Browse...", None))
         self.Recent_PushButton.setText(QCoreApplication.translate("DragGAN", u"Recent...", None))
-        self.Plus4Radius_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
-        self.Minus4Lambda_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
-        self.Lambda_LineEdit.setText(QCoreApplication.translate("DragGAN", u"0.5", None))
-        self.ShowMask_CheckBox.setText(QCoreApplication.translate("DragGAN", u"Show mask", None))
-        self.ResetMask_PushButton.setText(QCoreApplication.translate("DragGAN", u"Reset mask", None))
-        self.Mask_Label.setText(QCoreApplication.translate("DragGAN", u"Mask", None))
-        self.Lambda_Label.setText(QCoreApplication.translate("DragGAN", u"Lambda", None))
-        self.Radius_Label.setText(QCoreApplication.translate("DragGAN", u"Radius", None))
-        self.Radius_LineEdit.setText(QCoreApplication.translate("DragGAN", u"1", None))
-        self.FlexibleArea_PushButton.setText(QCoreApplication.translate("DragGAN", u"Flexible area", None))
-        self.Minus4Radius_PushButton.setText(QCoreApplication.translate("DragGAN", u"-", None))
-        self.Plus4Lambda_PushButton.setText(QCoreApplication.translate("DragGAN", u"+", None))
-        self.FixedArea_PushButton.setText(QCoreApplication.translate("DragGAN", u"Fixed area", None))
         self.AddPoint_PushButton.setText(QCoreApplication.translate("DragGAN", u"Add point", None))
         self.Steps_Label.setText(QCoreApplication.translate("DragGAN", u"Steps:", None))
         self.R1_Label.setText(QCoreApplication.translate("DragGAN", u"R1", None))
